@@ -75,9 +75,8 @@ const CH: Record<string, Channel> = {
   mesalva: { name: "Me Salva!", desc: "Aulas curtas de várias matérias" },
   descomplica: { name: "Descomplica", desc: "Todas as matérias do ENEM" },
   biototal: { name: "Biologia Total", desc: "Biologia com o Prof. Jubilut" },
-  boaro: { name: "Professor Noslen", desc: "Português e redação" },
+  boaro: { name: "Professor Boaro", desc: "Português e redação" },
 };
-CH.boaro = { name: "Professor Boaro", desc: "Português e redação" };
 
 export const CHANNELS_BY_SUBJECT: Record<string, Channel[]> = {
   "Matemática": [CH.ferretto, CH.equaciona, CH.mesalva, CH.descomplica],
