@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Plan logic lives in src/lib/planner.ts (pure, tested); persisted state + actions in src/lib/store.ts (localStorage, no backend) — keeps scheduling testable and the app offline-first.
