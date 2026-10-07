@@ -6,10 +6,10 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Render sets RENDER=true in both its build and runtime environments. There we
-// emit a plain Node server instead of the Cloudflare Worker target Lovable uses,
-// so the same repo builds for both hosts without touching Lovable's publish.
-const onRender = process.env.RENDER === "true";
+// Render sets RENDER=true in its build environment. There we emit a plain Node
+// server (`.output/server/index.mjs`) instead of the Cloudflare Worker target
+// Lovable publishes, so one repo builds for both hosts.
+const onRender = process.env["RENDER"] === "true";
 
 export default defineConfig({
   tanstackStart: {
@@ -17,5 +17,5 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  nitro: onRender ? { preset: "node-server" } : undefined,
+  ...(onRender ? { nitro: { preset: "node-server" } } : {}),
 });
