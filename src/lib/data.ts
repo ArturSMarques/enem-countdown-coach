@@ -69,14 +69,14 @@ export const SUBJECTS: { name: string; area: Area }[] = [
 ];
 
 export type Channel = { name: string; desc: string; url?: string };
-const CH: Record<string, Channel> = {
+const CH = {
   ferretto: { name: "Professor Ferretto", desc: "Matemática e Física direto ao ponto" },
   equaciona: { name: "Equaciona Matemática", desc: "Matemática com resolução de questões" },
   mesalva: { name: "Me Salva!", desc: "Aulas curtas de várias matérias" },
   descomplica: { name: "Descomplica", desc: "Todas as matérias do ENEM" },
   biototal: { name: "Biologia Total", desc: "Biologia com o Prof. Jubilut" },
   boaro: { name: "Professor Boaro", desc: "Português e redação" },
-};
+} satisfies Record<string, Channel>;
 
 export const CHANNELS_BY_SUBJECT: Record<string, Channel[]> = {
   "Matemática": [CH.ferretto, CH.equaciona, CH.mesalva, CH.descomplica],

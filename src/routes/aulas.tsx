@@ -6,7 +6,7 @@ import { AREA_ORDER, AREAS, CHANNELS_BY_SUBJECT, TOPICS, TOPIC_BY_ID, brasilEsco
 import { addLink, removeLink, useAppState } from "@/lib/store";
 
 export const Route = createFileRoute("/aulas")({
-  validateSearch: (s: Record<string, unknown>): { topic?: string } => ({ topic: typeof s.topic === "string" ? s.topic : undefined }),
+  validateSearch: (s: Record<string, unknown>): { topic?: string | undefined } => ({ topic: typeof s["topic"] === "string" ? s["topic"] : undefined }),
   head: () => ({
     meta: [
       { title: "Aulas e criadores — Reta Final ENEM" },

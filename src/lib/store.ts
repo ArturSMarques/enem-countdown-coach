@@ -112,7 +112,7 @@ export function moveBlock(fromDay: string, id: string, toDay: string) {
       ...s,
       plan: {
         ...s.plan,
-        [fromDay]: s.plan[fromDay].filter((x) => x.id !== id),
+        [fromDay]: (s.plan[fromDay] ?? []).filter((x) => x.id !== id),
         [toDay]: [...(s.plan[toDay] ?? []), b],
       },
     };

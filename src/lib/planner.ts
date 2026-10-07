@@ -10,7 +10,7 @@ export type Config = {
   hours: 1 | 1.5 | 2;
   shift: "manha" | "noite" | "ambos";
   difficulty: Difficulty;
-  goal?: number;
+  goal?: number | undefined;
 };
 export type PerfEntry = { id: string; date: string; subject: string; total: number; correct: number };
 
@@ -19,7 +19,7 @@ export const toISO = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 export const todayISO = () => toISO(new Date());
 const parse = (iso: string) => {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y = 0, m = 1, d = 1] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
 };
 export const addDays = (iso: string, n: number) => {
@@ -30,7 +30,7 @@ export const addDays = (iso: string, n: number) => {
 export const diffDays = (from: string, to: string) =>
   Math.round((Date.UTC(...ymd(to)) - Date.UTC(...ymd(from))) / 86400000);
 const ymd = (iso: string): [number, number, number] => {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y = 0, m = 1, d = 1] = iso.split("-").map(Number);
   return [y, m - 1, d];
 };
 export const fmtDay = (iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "2-digit", month: "2-digit" }) =>
@@ -59,9 +59,9 @@ const ST_W: Record<TopicStatus, number> = { dominado: 0.35, revisar: 1, nao: 1.2
 export function weakSubjects(perf: PerfEntry[]) {
   const agg: Record<string, { total: number; correct: number }> = {};
   for (const p of perf) {
-    agg[p.subject] ??= { total: 0, correct: 0 };
-    agg[p.subject].total += p.total;
-    agg[p.subject].correct += p.correct;
+    const a = (agg[p.subject] ??= { total: 0, correct: 0 });
+    a.total += p.total;
+    a.correct += p.correct;
   }
   return Object.entries(agg)
     .filter(([, v]) => v.total >= 5 && v.correct / v.total < 0.6)
@@ -101,7 +101,7 @@ export function buildPlan(opts: {
   let lastArea: Area | null = null;
 
   const pick = (list: typeof ranked) => {
-    let best = list[0];
+    let best = list[0]!;
     let bestV = -1;
     for (const r of list) {
       let v = r.score / (1 + (counts[r.topic.id] ?? 0));
@@ -127,7 +127,7 @@ export function buildPlan(opts: {
         return { id: newId(), topicId: tp.id, activity: "Redação", minutes: slot.minutes, shift: slot.shift, done: false };
       }
       const tp = pick(pool);
-      const c = counts[tp.id];
+      const c = counts[tp.id] ?? 0;
       let activity: Activity;
       if (final) activity = idx === simSlot ? "Simulado" : c % 2 ? "Revisão" : "Resumo";
       else activity = c === 1 ? "Videoaula" : c === 2 ? "Questões" : c % 2 ? "Revisão" : "Questões";
