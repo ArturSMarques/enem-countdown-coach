@@ -1,0 +1,26 @@
+# Render Blueprint — https://docs.lovable.dev/tips-tricks/external-deployment-hosting
+# Render reads this file automatically when you create a "Blueprint" instance
+# from the connected repository, so you don't have to type the settings by hand.
+services:
+  - type: web
+    name: reta-final-enem
+    env: node
+    # Branch Render deploys from. Change if your default branch has another name.
+    branch: main
+    # Bun reads bun.lock, so the installed versions match the ones used here.
+    buildCommand: bun install --frozen-lockfile && bun run build
+    # The build emits a Node server here (see vite.config.ts).
+    startCommand: node .output/server/index.mjs
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: BUN_VERSION
+        value: 1.3.3
+      # Tells vite.config.ts to build the Node server instead of the Cloudflare
+      # Worker target Lovable uses. Kept explicit so the build never depends on
+      # Render's own defaults.
+      - key: RENDER
+        value: "true"
+      - key: NITRO_PRESET
+        value: node-server
