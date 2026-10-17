@@ -15,6 +15,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Seu plano de estudos de hoje para a reta final do ENEM, em blocos curtos." },
       { property: "og:title", content: "Reta Final ENEM — o que estudar hoje" },
       { property: "og:description", content: "Contagem regressiva, blocos de 25 a 50 minutos e foco no que mais cai." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Today,

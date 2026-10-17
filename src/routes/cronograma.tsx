@@ -14,6 +14,8 @@ export const Route = createFileRoute("/cronograma")({
       { name: "description", content: "Visão semanal e até o dia da prova, com cores por área e blocos arrastáveis." },
       { property: "og:title", content: "Cronograma — Reta Final ENEM" },
       { property: "og:description", content: "Seu cronograma até o ENEM, priorizado pelo que mais cai." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Schedule,

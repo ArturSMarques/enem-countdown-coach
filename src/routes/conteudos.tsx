@@ -13,6 +13,8 @@ export const Route = createFileRoute("/conteudos")({
       { name: "description", content: "Os tópicos que mais caem no ENEM por matéria, com prioridade e seu nível de domínio." },
       { property: "og:title", content: "Conteúdos que mais caem no ENEM" },
       { property: "og:description", content: "Marque o que já domina e o app ajusta seu cronograma." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Contents,
