@@ -13,6 +13,8 @@ export const Route = createFileRoute("/desempenho")({
       { name: "description", content: "Registre questões e acertos por matéria e descubra seus pontos fracos." },
       { property: "og:title", content: "Desempenho — Reta Final ENEM" },
       { property: "og:description", content: "Acertos por área e pontos fracos que ajustam o cronograma." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Performance,

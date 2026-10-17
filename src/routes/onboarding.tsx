@@ -12,6 +12,8 @@ export const Route = createFileRoute("/onboarding")({
       { name: "description", content: "Em 1 minuto: data da prova, tempo por dia e nível em cada área." },
       { property: "og:title", content: "Configurar plano — Reta Final ENEM" },
       { property: "og:description", content: "Monte seu cronograma de reta final do ENEM em 1 minuto." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Onboarding,
