@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { ExternalResourceLink as A } from "@/components/ExternalResourceLink";
 import { AreaTag, Chip, Loading, PageHeader } from "@/components/ui-bits";
 import { AREA_ORDER, AREAS, CHANNELS_BY_SUBJECT, TOPICS, TOPIC_BY_ID, brasilEscola, todaMateria, ytChannel, ytSearch, type Area } from "@/lib/data";
 import { addLink, removeLink, useAppState } from "@/lib/store";
+import { normalizeResourceURL } from "@/lib/youtube";
 
 export const Route = createFileRoute("/aulas")({
   validateSearch: (s: Record<string, unknown>): { topic?: string | undefined } => ({ topic: typeof s["topic"] === "string" ? s["topic"] : undefined }),
@@ -13,16 +15,12 @@ export const Route = createFileRoute("/aulas")({
       { name: "description", content: "Canais gratuitos recomendados para cada tópico do ENEM, e seus próprios links." },
       { property: "og:title", content: "Aulas gratuitas para o ENEM" },
       { property: "og:description", content: "Ferretto, Equaciona, Me Salva!, Descomplica, Biologia Total, Boaro e mais." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Lessons,
 });
-
-const A = ({ href, children }: { href: string; children: React.ReactNode }) => (
-  <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
-    {children} <ExternalLink className="h-3 w-3" />
-  </a>
-);
 
 function Lessons() {
   const { topic } = Route.useSearch();
@@ -30,6 +28,7 @@ function Lessons() {
   const [area, setArea] = useState<Area>(topic ? TOPIC_BY_ID[topic]?.area ?? "mat" : "mat");
   const [open, setOpen] = useState<string | null>(topic ?? null);
   const [form, setForm] = useState({ title: "", url: "" });
+  const [formError, setFormError] = useState("");
   if (!ready) return <Loading />;
   const list = TOPICS.filter((t) => t.area === area);
   const mine = state.links.filter((l) => l.area === area);
@@ -56,7 +55,7 @@ function Lessons() {
                       <span className="font-semibold">{c.name}</span>
                       <span className="block text-xs text-muted-foreground">{c.desc}</span>
                     </span>
-                    <span className="flex gap-3 text-xs">
+                      <span className="flex min-w-0 max-w-full flex-wrap gap-3 text-xs">
                       <A href={ytSearch(`${c.name} ${t.name} ENEM`)}>Buscar aula</A>
                       <A href={ytChannel(c.name)}>Canal</A>
                     </span>
@@ -90,13 +89,19 @@ function Lessons() {
           className="mt-3 space-y-2"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!form.title.trim() || !/^https?:\/\//.test(form.url)) return;
-            addLink({ ...form, area });
+            const url = normalizeResourceURL(form.url);
+            if (!form.title.trim() || !url) {
+              setFormError("Preencha o nome e um link válido para adicionar.");
+              return;
+            }
+            addLink({ title: form.title.trim(), url, area });
+            setFormError("");
             setForm({ title: "", url: "" });
           }}
         >
           <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Nome (ex.: Canal do Fulano)" className="w-full rounded-xl border bg-background px-3 py-2 text-sm" />
           <input value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://…" className="w-full rounded-xl border bg-background px-3 py-2 text-sm" />
+          {formError && <p role="alert" className="text-xs text-destructive">{formError}</p>}
           <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground">
             <Plus className="h-4 w-4" /> Adicionar link
           </button>
