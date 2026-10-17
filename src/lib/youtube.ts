@@ -1,5 +1,5 @@
 /** Browser-safe parsing: importing this module during SSR does not launch links. */
-export type YouTubeLink = { url: string; videoId?: string; startSeconds?: number };
+export type YouTubeLink = { url: string; videoId?: string; startSeconds?: number | undefined };
 export type OpenYouTubeResult = { ok: true; url: string } | { ok: false; error: string };
 
 export const isYouTubeCandidate = (value: string) => /(?:youtube(?:-nocookie)?\.com|youtu\.be)/i.test(value);
