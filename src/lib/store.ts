@@ -5,11 +5,14 @@ import {
   buildPlan,
   redistribute,
   todayISO,
+  weakSubjects,
   type Block,
   type Config,
   type PerfEntry,
   type TopicStatus,
 } from "./planner";
+import { DAILY_COUNT, EXTRA_COUNT, pickQuestions, withQuizResult, type QuizAnswer } from "./quiz";
+import { QUESTION_BY_ID, questionSubject } from "./questions";
 
 export type CustomLink = { id: string; title: string; url: string; area: Area };
 export type State = {
@@ -22,10 +25,14 @@ export type State = {
   studied: string[];
   skipped: string[];
   theme: "light" | "dark" | null;
+  /** Answers given in the questions section, by question id. */
+  quiz: Record<string, QuizAnswer>;
+  /** Question ids shown on each day (saved so the day's set does not change after answering). */
+  quizDaily: Record<string, string[]>;
 };
 
 const KEY = "reta-final-enem-v1";
-const EMPTY: State = { config: null, plan: {}, status: {}, perf: [], links: [], checklist: {}, studied: [], skipped: [], theme: null };
+const EMPTY: State = { config: null, plan: {}, status: {}, perf: [], links: [], checklist: {}, studied: [], skipped: [], theme: null, quiz: {}, quizDaily: {} };
 
 let state: State = EMPTY;
 let loaded = false;
@@ -127,6 +134,56 @@ export const addLink = (l: Omit<CustomLink, "id">) => setState((s) => ({ ...s, l
 export const removeLink = (id: string) => setState((s) => ({ ...s, links: s.links.filter((l) => l.id !== id) }));
 export const toggleCheck = (id: string) => setState((s) => ({ ...s, checklist: { ...s.checklist, [id]: !s.checklist[id] } }));
 export const setTheme = (theme: "light" | "dark") => setState((s) => ({ ...s, theme }));
+
+// ---------- questions ----------
+function planTopicsOf(s: State, day: string) {
+  return new Set((s.plan[day] ?? []).map((b) => b.topicId));
+}
+function weakSubjectsOf(s: State) {
+  return new Set(weakSubjects(s.perf).map((w) => w.subject));
+}
+
+/** Creates the day's set of questions the first time the day is opened. */
+export function ensureDailyQuiz(day: string) {
+  setState((s) => {
+    if (s.quizDaily[day]) return s;
+    const ids = pickQuestions({
+      day,
+      count: DAILY_COUNT,
+      answered: new Set(Object.keys(s.quiz)),
+      planTopics: planTopicsOf(s, day),
+      weakSubjects: weakSubjectsOf(s),
+    });
+    return { ...s, quizDaily: { ...s.quizDaily, [day]: ids } };
+  });
+}
+
+/** Adds more new questions to the day's set. */
+export function moreQuestions(day: string) {
+  setState((s) => {
+    const current = s.quizDaily[day] ?? [];
+    const ids = pickQuestions({
+      day,
+      count: EXTRA_COUNT,
+      answered: new Set(Object.keys(s.quiz)),
+      exclude: new Set(current),
+      planTopics: planTopicsOf(s, day),
+      weakSubjects: weakSubjectsOf(s),
+    });
+    return { ...s, quizDaily: { ...s.quizDaily, [day]: [...current, ...ids] } };
+  });
+}
+
+export function answerQuestion(id: string, choice: number) {
+  const question = QUESTION_BY_ID[id];
+  if (!question || choice < 0 || choice >= question.options.length) return;
+  const day = todayISO();
+  setState((s) => {
+    if (s.quiz[id]) return s;
+    const perf = withQuizResult(s.perf, questionSubject(question), choice === question.answer, day, crypto.randomUUID());
+    return { ...s, quiz: { ...s.quiz, [id]: { choice, day } }, perf };
+  });
+}
 
 export function streakOf(studied: string[]) {
   const set = new Set(studied);

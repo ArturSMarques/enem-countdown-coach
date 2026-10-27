@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BarChart3, BookOpen, CalendarDays, Sun } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, ListChecks, Sun } from "lucide-react";
 
 const TABS = [
   { to: "/", label: "Hoje", icon: Sun },
   { to: "/cronograma", label: "Cronograma", icon: CalendarDays },
   { to: "/conteudos", label: "Conteúdos", icon: BookOpen },
+  { to: "/questoes", label: "Questões", icon: ListChecks },
   { to: "/desempenho", label: "Desempenho", icon: BarChart3 },
 ] as const;
 
@@ -13,7 +14,7 @@ export function BottomNav() {
   if (path.startsWith("/onboarding")) return null;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
-      <ul className="mx-auto grid max-w-2xl grid-cols-4">
+      <ul className="mx-auto grid max-w-2xl grid-cols-5">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? path === "/" : path.startsWith(to) || (to === "/conteudos" && path.startsWith("/aulas"));
           return (
