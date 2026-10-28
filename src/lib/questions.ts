@@ -1,31 +1,35 @@
 import { TOPIC_BY_ID } from "./data";
+import type { Level, Question } from "./question-types";
+import { ENEM_QUESTIONS } from "./questions-enem";
+
+export type { Question } from "./question-types";
 
 /**
- * Banco de questões no estilo ENEM (autorais, 5 alternativas).
+ * Banco de questões. Este arquivo reúne as questões curtas (fáceis e algumas médias); as
+ * questões no estilo ENEM, com textos, tabelas e imagens, ficam em questions-enem.ts.
  *
- * Para adicionar questões novas: acrescente uma linha no FIM da lista com um id inédito
+ * Para adicionar questões novas: acrescente uma entrada no FIM de uma das listas com um id inédito
  * ("<id-do-tópico>-<número>"). Nunca reordene nem mude ids antigos: o progresso salvo no
  * navegador usa o id da questão. O app sorteia as novas automaticamente nos próximos dias.
  */
-export type Question = {
-  id: string;
-  topicId: string;
-  text: string;
-  options: string[];
-  answer: number;
-  why: string;
-};
-
-const q = (id: string, text: string, options: string[], answer: number, why: string): Question => ({
+const q = (id: string, text: string, options: string[], answer: number, why: string, level: Level = "facil"): Question => ({
   id,
   topicId: id.replace(/-\d+$/, ""),
+  level,
   text,
   options,
   answer,
   why,
 });
 
-export const QUESTIONS: Question[] = [
+/** Questões curtas que exigem mais de uma etapa de raciocínio. */
+const MEDIA = new Set([
+  "mat-porc-1", "mat-regra3-2", "mat-estat-2", "mat-prob-2", "mat-graf-1", "mat-geop-1", "mat-geop-2", "mat-func-2",
+  "fis-ener-2", "fis-elet-1", "fis-elet-3", "fis-termo-1", "qui-esteq-1", "qui-sol-2", "bio-gen-3", "bio-eco-3",
+  "his-br-2", "geo-geopol-2", "filo-1", "lin-interp-1", "lin-interp-2", "red-int-2", "red-comp-2",
+]);
+
+const SHORT_QUESTIONS: Question[] = [
   // ---------- Matemática ----------
   q("mat-porc-1", "Um produto custava R$ 200,00. Ele sofreu um aumento de 20% e, em seguida, um desconto de 20% sobre o novo preço. Qual é o preço final?",
     ["R$ 200,00", "R$ 196,00", "R$ 192,00", "R$ 188,00", "R$ 180,00"], 2,
@@ -354,6 +358,11 @@ export const QUESTIONS: Question[] = [
   q("red-int-2", "Qual das propostas de intervenção abaixo está mais completa?",
     ["\"O governo deve resolver o problema.\"", "\"É preciso que todos pensem melhor sobre o assunto.\"", "\"O Ministério da Educação deve ampliar bibliotecas públicas, por meio de verbas federais, a fim de ampliar o acesso à leitura.\"", "\"Algo precisa ser feito urgentemente.\"", "\"A sociedade tem de mudar.\""], 2,
     "Só a proposta do Ministério da Educação traz agente, ação (ampliar bibliotecas), meio (verbas federais) e finalidade (ampliar o acesso à leitura)."),
+];
+
+export const QUESTIONS: Question[] = [
+  ...SHORT_QUESTIONS.map((x) => (MEDIA.has(x.id) ? { ...x, level: "media" as const } : x)),
+  ...ENEM_QUESTIONS,
 ];
 
 export const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((x) => [x.id, x])) as Record<string, Question>;

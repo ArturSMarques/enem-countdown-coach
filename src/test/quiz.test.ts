@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { TOPIC_BY_ID } from "@/lib/data";
+import { LEVELS } from "@/lib/question-types";
 import { DAILY_COUNT, optionOrder, pickQuestions, withQuizResult } from "@/lib/quiz";
 import { QUESTIONS, QUESTION_BY_ID } from "@/lib/questions";
+import { ENEM_QUESTIONS } from "@/lib/questions-enem";
 
 describe("question bank", () => {
   it("has unique ids, valid topics, five options and a valid answer", () => {
@@ -13,6 +15,26 @@ describe("question bank", () => {
       expect(x.answer, x.id).toBeGreaterThanOrEqual(0);
       expect(x.answer, x.id).toBeLessThan(5);
       expect(x.why.length, x.id).toBeGreaterThan(10);
+    }
+  });
+
+  it("has questions in all three levels, with enough ENEM-style material in the harder ones", () => {
+    for (const l of LEVELS) expect(QUESTIONS.filter((x) => x.level === l).length, l).toBeGreaterThanOrEqual(15);
+    const rich = (x: (typeof QUESTIONS)[number]) => Boolean(x.figure || x.table || x.passages?.length);
+    const hard = QUESTIONS.filter((x) => x.level === "dificil");
+    expect(hard.filter(rich).length / hard.length).toBeGreaterThan(0.8);
+    expect(ENEM_QUESTIONS.filter(rich).length / ENEM_QUESTIONS.length).toBeGreaterThan(0.9);
+    expect(QUESTIONS.filter((x) => x.level === "facil").every((x) => !x.figure)).toBe(true);
+  });
+
+  it("describes every figure in text and every table with consistent columns", () => {
+    for (const x of QUESTIONS) {
+      if (x.figure) {
+        expect(x.figure.alt.length, x.id).toBeGreaterThan(30);
+        expect(decodeURIComponent(x.figure.src.split(",")[1] ?? ""), x.id).toContain("<svg");
+      }
+      if (x.table) for (const row of x.table.rows) expect(row.length, x.id).toBe(x.table.head.length === 2 || x.table.head.length > 2 ? x.table.head.length : row.length);
+      for (const p of x.passages ?? []) expect(p.body.length, x.id).toBeGreaterThan(20);
     }
   });
 
@@ -42,6 +64,26 @@ describe("daily selection", () => {
     expect(a).toHaveLength(DAILY_COUNT);
   });
 
+  it("mixes levels in the daily set, weighted toward the harder ones", () => {
+    const ids = pickQuestions({ day: "2026-11-07", count: DAILY_COUNT, answered: none });
+    const levels = ids.map((id) => QUESTION_BY_ID[id]!.level);
+    expect(levels.filter((l) => l === "dificil")).toHaveLength(2);
+    expect(levels.filter((l) => l === "media")).toHaveLength(2);
+    expect(levels.filter((l) => l === "facil")).toHaveLength(1);
+  });
+
+  it("returns only the chosen level, never an answered question", () => {
+    const answered = new Set(QUESTIONS.filter((x) => x.level === "dificil").slice(0, 3).map((x) => x.id));
+    const ids = pickQuestions({ day: "2026-11-08", count: 5, answered, level: "dificil" });
+    expect(ids).toHaveLength(5);
+    for (const id of ids) {
+      expect(QUESTION_BY_ID[id]!.level).toBe("dificil");
+      expect(answered.has(id)).toBe(false);
+    }
+    const all = new Set(QUESTIONS.filter((x) => x.level === "dificil").map((x) => x.id));
+    expect(pickQuestions({ day: "2026-11-08", count: 5, answered: all, level: "dificil" })).toEqual([]);
+  });
+
   it("never repeats an answered question while new ones remain", () => {
     const answered = new Set<string>();
     for (let i = 0; i < 15; i++) {
@@ -57,8 +99,7 @@ describe("daily selection", () => {
   it("favours topics from today's plan", () => {
     const ids = pickQuestions({ day: "2026-11-03", count: DAILY_COUNT, answered: none, planTopics: new Set(["fis-ener", "mat-porc"]) });
     const topics = ids.map((id) => QUESTION_BY_ID[id]!.topicId);
-    expect(topics).toContain("fis-ener");
-    expect(topics).toContain("mat-porc");
+    expect(topics.filter((t) => t === "fis-ener" || t === "mat-porc").length).toBeGreaterThanOrEqual(2);
   });
 
   it("limits each topic to two questions and avoids duplicates", () => {

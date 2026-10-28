@@ -11,7 +11,7 @@ import {
   type PerfEntry,
   type TopicStatus,
 } from "./planner";
-import { DAILY_COUNT, EXTRA_COUNT, pickQuestions, withQuizResult, type QuizAnswer } from "./quiz";
+import { DAILY_COUNT, EXTRA_COUNT, pickQuestions, withQuizResult, type LevelChoice, type QuizAnswer } from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
 
 export type CustomLink = { id: string; title: string; url: string; area: Area };
@@ -158,18 +158,20 @@ export function ensureDailyQuiz(day: string) {
   });
 }
 
-/** Adds more new questions to the day's set. */
-export function moreQuestions(day: string) {
+/** Adds more new questions to the day's set, of the chosen level (or a mix of levels). */
+export function moreQuestions(day: string, level: LevelChoice = "mix") {
   setState((s) => {
     const current = s.quizDaily[day] ?? [];
     const ids = pickQuestions({
       day,
       count: EXTRA_COUNT,
+      level,
       answered: new Set(Object.keys(s.quiz)),
       exclude: new Set(current),
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
     });
+    if (!ids.length) return s;
     return { ...s, quizDaily: { ...s.quizDaily, [day]: [...current, ...ids] } };
   });
 }

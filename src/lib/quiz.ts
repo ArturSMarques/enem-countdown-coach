@@ -1,5 +1,6 @@
 import { TOPIC_BY_ID, type Priority } from "./data";
 import type { PerfEntry } from "./planner";
+import type { Level } from "./question-types";
 import { QUESTIONS, questionSubject, type Question } from "./questions";
 
 export const DAILY_COUNT = 5;
@@ -26,23 +27,28 @@ export function seededRandom(seed: string) {
 
 const PRI: Record<Priority, number> = { alta: 1, media: 0.5, baixa: 0 };
 
+export type LevelChoice = Level | "mix";
+
 /**
- * Chooses which questions to show on a day. Unanswered questions come first (a new question is
- * never repeated while there are fresh ones). Among them, topics in the day's study plan and
- * weak subjects weigh more; a seeded jitter varies the rest from day to day. No more than two
- * questions share a topic. When the bank is exhausted, answered questions are reused.
+ * Chooses which questions to show. Questions never answered always come first, so a question is
+ * not repeated while there are fresh ones. Topics in the day's study plan and weak subjects weigh
+ * more, and a seeded jitter varies the rest from day to day. No more than two questions share a
+ * topic. With level "mix" (the daily set) the choice is weighted toward harder questions: 40%
+ * difícil, 40% média and 20% fácil, as in the real exam. With a specific level only that level is
+ * returned (possibly fewer than `count`). Once the whole bank was answered, "mix" reuses old ones.
  */
 export function pickQuestions(opts: {
   day: string;
   count: number;
   answered: ReadonlySet<string>;
+  level?: LevelChoice;
   exclude?: ReadonlySet<string>;
   planTopics?: ReadonlySet<string>;
   weakSubjects?: ReadonlySet<string>;
   bank?: Question[];
 }): string[] {
-  const { day, count, answered, exclude = new Set(), planTopics = new Set(), weakSubjects = new Set() } = opts;
-  const rand = seededRandom(`${day}:${exclude.size}`);
+  const { day, count, answered, level = "mix", exclude = new Set(), planTopics = new Set(), weakSubjects = new Set() } = opts;
+  const rand = seededRandom(`${day}:${exclude.size}:${level}`);
   const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id));
   const score = (x: Question) =>
     (planTopics.has(x.topicId) ? 3 : 0) +
@@ -51,20 +57,34 @@ export function pickQuestions(opts: {
     rand() * 2;
   const ranked = (list: Question[]) =>
     list.map((x) => ({ x, s: score(x) })).sort((a, b) => b.s - a.s).map((r) => r.x);
-  const ordered = [...ranked(pool.filter((x) => !answered.has(x.id))), ...ranked(pool.filter((x) => answered.has(x.id)))];
+  const fresh = pool.filter((x) => !answered.has(x.id));
+  const old = pool.filter((x) => answered.has(x.id));
 
   const perTopic: Record<string, number> = {};
   const picked: string[] = [];
-  for (const x of ordered) {
-    if (picked.length >= count) break;
-    if ((perTopic[x.topicId] ?? 0) >= 2) continue;
-    perTopic[x.topicId] = (perTopic[x.topicId] ?? 0) + 1;
-    picked.push(x.id);
+  const take = (list: Question[], n: number, cap = 2) => {
+    for (const x of list) {
+      if (n <= 0) break;
+      if (picked.includes(x.id) || (perTopic[x.topicId] ?? 0) >= cap) continue;
+      perTopic[x.topicId] = (perTopic[x.topicId] ?? 0) + 1;
+      picked.push(x.id);
+      n--;
+    }
+  };
+
+  if (level !== "mix") {
+    take(ranked(fresh.filter((x) => x.level === level)), count);
+    take(ranked(fresh.filter((x) => x.level === level)), count - picked.length, Infinity);
+    return picked;
   }
-  for (const x of ordered) {
-    if (picked.length >= count) break;
-    if (!picked.includes(x.id)) picked.push(x.id);
-  }
+  const hard = Math.round(count * 0.4);
+  const mid = Math.round(count * 0.4);
+  take(ranked(fresh.filter((x) => x.level === "dificil")), hard);
+  take(ranked(fresh.filter((x) => x.level === "media")), mid);
+  take(ranked(fresh.filter((x) => x.level === "facil")), count - hard - mid);
+  take(ranked(fresh), count - picked.length);
+  take(ranked(old), count - picked.length);
+  take(ranked([...fresh, ...old]), count - picked.length, Infinity);
   return picked;
 }
 
