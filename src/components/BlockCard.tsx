@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, PlayCircle } from "lucide-react";
+import { Check, ChevronDown, ListChecks, PlayCircle } from "lucide-react";
 import { useState } from "react";
 import { AREAS, TOPIC_BY_ID } from "@/lib/data";
 import type { Block } from "@/lib/planner";
@@ -46,6 +46,11 @@ export function BlockCard({ block, onToggle, compact }: { block: Block; onToggle
           <Link to="/aulas" search={{ topic: tp.id }} className="mt-2 inline-flex items-center gap-1.5 font-semibold text-primary">
             <PlayCircle className="h-4 w-4" /> Aulas sobre este tópico
           </Link>
+          {block.activity === "Questões" && (
+            <Link to="/questoes" className="mt-2 flex items-center gap-1.5 font-semibold text-primary">
+              <ListChecks className="h-4 w-4" /> Fazer questões do dia
+            </Link>
+          )}
         </div>
       )}
     </div>

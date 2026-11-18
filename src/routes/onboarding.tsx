@@ -103,14 +103,20 @@ function Onboarding() {
         </section>
 
         <section className="card-soft p-5">
-          <label className="text-sm font-bold" htmlFor="goal">Meta de nota (opcional)</label>
+          <label className="text-sm font-bold" htmlFor="goal">Meta de nota geral no ENEM (opcional)</label>
+          <p id="goal-help" className="mt-1 text-xs text-muted-foreground">
+            A nota geral que você quer tirar no ENEM, ou seja, a média das cinco provas (Linguagens, Humanas, Natureza, Matemática e Redação). A escala vai de 0 a 1000.
+          </p>
           <input
             id="goal"
             type="number"
             inputMode="numeric"
+            min={0}
+            max={1000}
+            aria-describedby="goal-help"
             placeholder="Ex.: 720"
             value={cfg.goal ?? ""}
-            onChange={(e) => setCfg({ ...cfg, goal: e.target.value ? Number(e.target.value) : undefined })}
+            onChange={(e) => setCfg({ ...cfg, goal: e.target.value ? Math.min(1000, Math.max(0, Math.round(Number(e.target.value)))) : undefined })}
             className="mt-2 w-full rounded-xl border bg-background px-3 py-2.5 text-base"
           />
         </section>

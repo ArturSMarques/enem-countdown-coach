@@ -1,6 +1,5 @@
 /** Browser-safe parsing: importing this module during SSR does not launch links. */
 export type YouTubeLink = { url: string; videoId?: string; startSeconds?: number | undefined };
-export type OpenYouTubeResult = { ok: true; url: string } | { ok: false; error: string };
 
 export const isYouTubeCandidate = (value: string) => /(?:youtube(?:-nocookie)?\.com|youtu\.be)/i.test(value);
 
@@ -68,60 +67,4 @@ export function normalizeYouTubeURL(value: string): YouTubeLink | null {
 export function normalizeResourceURL(value: string): string | null {
   if (isYouTubeCandidate(value)) return normalizeYouTubeURL(value)?.url ?? null;
   return parseURL(value)?.href ?? null;
-}
-
-export function youtubeLaunchURL(url: string, platform: 'android' | 'ios' | 'desktop'): string {
-  const parsed = new URL(url);
-  if (platform === 'android') {
-    return `intent://${parsed.host}${parsed.pathname}${parsed.search}#Intent;scheme=https;package=com.google.android.youtube;S.browser_fallback_url=${encodeURIComponent(url)};end`;
-  }
-  if (platform === 'ios') return `youtube://${parsed.pathname.slice(1)}${parsed.search}`;
-  return url;
-}
-
-function clickExternal(url: string) {
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.target = '_blank';
-  anchor.rel = 'noopener noreferrer';
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-}
-
-/** Call synchronously from a user click. Browser APIs cannot confirm app installation. */
-export function openYouTubeVideo(value: string): OpenYouTubeResult {
-  const link = normalizeYouTubeURL(value);
-  if (!link) return { ok: false, error: 'Este link do YouTube não é válido. Confira o endereço e tente novamente.' };
-  if (typeof window === 'undefined') return { ok: false, error: 'Abra este link pelo navegador.' };
-  const ua = navigator.userAgent;
-  const platform = /Android/i.test(ua) ? 'android' : /iPhone|iPad|iPod/i.test(ua) || /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1 ? 'ios' : 'desktop';
-  try {
-    const launch = youtubeLaunchURL(link.url, platform);
-    if (platform === 'ios') {
-      // Visibility is only a heuristic. The UI always keeps a manual HTTPS fallback.
-      let timer: ReturnType<typeof setTimeout>;
-      const cancel = () => {
-        if (document.visibilityState === 'hidden') cleanup();
-      };
-      const cleanup = () => {
-        clearTimeout(timer);
-        document.removeEventListener('visibilitychange', cancel);
-        window.removeEventListener('pagehide', cleanup);
-      };
-      timer = setTimeout(() => {
-        cleanup();
-        if (document.visibilityState === 'visible') clickExternal(link.url);
-      }, 1800);
-      document.addEventListener('visibilitychange', cancel);
-      window.addEventListener('pagehide', cleanup, { once: true });
-      clickExternal(launch);
-    } else {
-      clickExternal(launch);
-    }
-    return { ok: true, url: link.url };
-  } catch {
-    // Still return the safe URL so the visible fallback remains usable.
-    return { ok: true, url: link.url };
-  }
 }

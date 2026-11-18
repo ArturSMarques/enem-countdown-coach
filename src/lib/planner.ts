@@ -12,7 +12,15 @@ export type Config = {
   difficulty: Difficulty;
   goal?: number | undefined;
 };
-export type PerfEntry = { id: string; date: string; subject: string; total: number; correct: number };
+export type PerfEntry = {
+  id: string;
+  date: string;
+  subject: string;
+  total: number;
+  correct: number;
+  /** "quiz" marks entries filled in automatically by the daily questions. */
+  source?: "quiz" | undefined;
+};
 
 // ---------- dates (local, ISO yyyy-mm-dd) ----------
 export const toISO = (d: Date) =>

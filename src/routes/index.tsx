@@ -72,7 +72,7 @@ function Today() {
           <span className="pb-2 text-lg font-semibold">{daysLeft === 1 ? "dia" : "dias"} para o ENEM</span>
         </div>
         <p className="mt-3 text-sm opacity-90">{daysLeft <= 0 ? "É hoje (ou já foi). Confie no que você estudou." : msg}</p>
-        {cfg.goal && <p className="mt-1 text-xs font-semibold opacity-75">Meta: {cfg.goal} pontos</p>}
+        {cfg.goal && <p className="mt-1 text-xs font-semibold opacity-75">Meta no ENEM: {cfg.goal} pontos (nota geral)</p>}
       </section>
 
       <section className="mt-4 grid grid-cols-[1fr_auto] gap-3">

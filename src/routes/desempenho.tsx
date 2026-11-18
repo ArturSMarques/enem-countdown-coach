@@ -115,7 +115,7 @@ function Performance() {
           <ul className="space-y-1">
             {[...state.perf].reverse().slice(0, 15).map((p) => (
               <li key={p.id} className="flex items-center justify-between rounded-xl px-2 py-1.5 text-sm hover:bg-muted">
-                <span><span className="text-muted-foreground">{fmtDay(p.date, { day: "2-digit", month: "2-digit" })}</span> · {p.subject}</span>
+                <span><span className="text-muted-foreground">{fmtDay(p.date, { day: "2-digit", month: "2-digit" })}</span> · {p.subject}{p.source === "quiz" && <span className="text-muted-foreground"> · questões do dia</span>}</span>
                 <span className="flex items-center gap-2 font-semibold">
                   {p.correct}/{p.total}
                   <button aria-label="Remover" onClick={() => removePerf(p.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
