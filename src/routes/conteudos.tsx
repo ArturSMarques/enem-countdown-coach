@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PlayCircle } from "lucide-react";
+import { BookOpen, PlayCircle } from "lucide-react";
 import { useState } from "react";
 import { Chip, Loading, PageHeader } from "@/components/ui-bits";
+import { CONTENT } from "@/lib/content";
 import { AREA_ORDER, AREAS, TOPICS, type Area } from "@/lib/data";
 import type { TopicStatus } from "@/lib/planner";
 import { setTopicStatus, useAppState } from "@/lib/store";
@@ -87,7 +88,14 @@ function Contents() {
                         className="flex w-full items-center justify-between gap-2 text-left"
                         onClick={() => setOpen(open === t.id ? null : t.id)}
                       >
-                        <span className="font-semibold">{t.name}</span>
+                        <span className="font-semibold">
+                          {t.name}
+                          {CONTENT[t.id] && (
+                            <span className="ml-1.5 align-middle text-[10px] font-bold uppercase tracking-wide text-primary">
+                              aprofundado
+                            </span>
+                          )}
+                        </span>
                         <span
                           className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${PRI_STYLE[t.priority]}`}
                         >
@@ -97,13 +105,23 @@ function Contents() {
                       {open === t.id && (
                         <div className="animate-in fade-in mt-2 text-sm">
                           <p className="text-muted-foreground">{t.tip}</p>
-                          <Link
-                            to="/aulas"
-                            search={{ topic: t.id }}
-                            className="mt-1.5 inline-flex items-center gap-1 font-semibold text-primary"
-                          >
-                            <PlayCircle className="h-4 w-4" /> Ver aulas
-                          </Link>
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+                            <Link
+                              to="/conteudos/$topicId"
+                              params={{ topicId: t.id }}
+                              className="inline-flex items-center gap-1 font-semibold text-primary"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              {CONTENT[t.id] ? "Estudar o tópico" : "Teste rápido"}
+                            </Link>
+                            <Link
+                              to="/aulas"
+                              search={{ topic: t.id }}
+                              className="inline-flex items-center gap-1 font-semibold text-primary"
+                            >
+                              <PlayCircle className="h-4 w-4" /> Ver aulas
+                            </Link>
+                          </div>
                         </div>
                       )}
                       <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">

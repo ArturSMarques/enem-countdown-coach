@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ListChecks, PlayCircle } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ListChecks, PlayCircle } from "lucide-react";
 import { useState } from "react";
 import { AREAS, TOPIC_BY_ID } from "@/lib/data";
 import type { Block } from "@/lib/planner";
@@ -60,6 +60,16 @@ export function BlockCard({
       {open && (
         <div className="animate-in fade-in slide-in-from-top-1 border-t px-3.5 pb-3.5 pt-3 text-sm">
           <p className="text-muted-foreground">{tp.tip}</p>
+          <Link
+            to="/conteudos/$topicId"
+            params={{ topicId: tp.id }}
+            className="mt-2 flex items-center gap-1.5 font-semibold text-primary"
+          >
+            <BookOpen className="h-4 w-4" />
+            {block.activity === "Aprofundamento"
+              ? "Estudar a camada avançada"
+              : "Estudar este tópico"}
+          </Link>
           <Link
             to="/aulas"
             search={{ topic: tp.id }}
