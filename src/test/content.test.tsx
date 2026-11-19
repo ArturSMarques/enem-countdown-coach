@@ -95,3 +95,17 @@ describe("topic priorities", () => {
       ).toBe(true);
   });
 });
+
+describe("content coverage", () => {
+  it("has a summary and traps for every topic, and all layers for the most frequent ones", async () => {
+    const { TOPICS } = await import("@/lib/data");
+    const { incidenceTotal } = await import("@/lib/incidence");
+    expect(TOPICS.filter((t) => !CONTENT[t.id]).map((t) => t.id)).toEqual([]);
+    const top = TOPICS.filter((t) => t.area !== "red" && incidenceTotal(t.id) >= 9);
+    for (const t of top) {
+      const c = CONTENT[t.id]!;
+      expect(c.intermediario, t.id).toBeDefined();
+      expect(c.avancado, t.id).toBeDefined();
+    }
+  });
+});
