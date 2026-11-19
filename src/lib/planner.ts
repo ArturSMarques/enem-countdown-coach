@@ -1,4 +1,5 @@
 import { TOPICS, SUBJECTS, type Area, type Topic } from "./data";
+import { incidenceTotal } from "./incidence";
 
 export type Shift = "manha" | "noite";
 export type Activity =
@@ -92,6 +93,17 @@ export function weakSubjects(perf: PerfEntry[]) {
     .sort((a, b) => a.rate - b.rate);
 }
 
+/**
+ * Weight of a topic in the plan: how often it appeared in recent exams (see incidence.ts), or the
+ * priority label when there is no count (essay topics). 4 questions in three years ≈ weight 1.
+ */
+export function topicWeight(topic: Topic) {
+  const n = incidenceTotal(topic.id);
+  return topic.area === "red" || n === 0
+    ? PRI[topic.priority]
+    : Math.min(4.5, Math.max(0.75, n / 4));
+}
+
 export function topicScore(
   topic: Topic,
   cfg: Config,
@@ -101,7 +113,7 @@ export function topicScore(
   const diff = topic.area === "red" ? Math.max(cfg.difficulty.ling, 3) : cfg.difficulty[topic.area];
   const st = status[topic.id] ?? "nao";
   return (
-    PRI[topic.priority] *
+    topicWeight(topic) *
     AREA_W[topic.area] *
     (0.6 + diff * 0.2) *
     ST_W[st] *

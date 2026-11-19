@@ -5,6 +5,7 @@ import { Collapsible, ExerciseCard, LayerBody, TrapList } from "@/components/Top
 import { AreaTag, Loading } from "@/components/ui-bits";
 import { CONTENT, LAYER_HINT, LAYER_LABEL } from "@/lib/content";
 import { TOPIC_BY_ID } from "@/lib/data";
+import { INCIDENCE, INCIDENCE_YEARS } from "@/lib/incidence";
 import { LEVELS } from "@/lib/question-types";
 import { QUESTIONS } from "@/lib/questions";
 import { answerQuestion, useAppState } from "@/lib/store";
@@ -72,6 +73,13 @@ function TopicPage() {
       </div>
       <h1 className="mt-1.5 text-2xl font-extrabold leading-tight">{topic.name}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{topic.tip}</p>
+      {INCIDENCE[topic.id] && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          No ENEM {INCIDENCE_YEARS.join(", ")}:{" "}
+          {INCIDENCE[topic.id]!.map((n, i) => `${n} em ${INCIDENCE_YEARS[i]}`).join(", ")}{" "}
+          (estimativa por classificação própria das provas oficiais).
+        </p>
+      )}
 
       {content ? (
         <>

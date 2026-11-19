@@ -77,3 +77,21 @@ describe("ExerciseCard", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Certo!");
   });
 });
+
+describe("topic priorities", () => {
+  it("follow the incidence counted in the official 2024–2026 exams", async () => {
+    const { TOPICS } = await import("@/lib/data");
+    const { incidenceTotal, INCIDENCE } = await import("@/lib/incidence");
+    for (const t of TOPICS) {
+      if (t.area === "red") continue;
+      expect(INCIDENCE[t.id], t.id).toBeDefined();
+      const n = incidenceTotal(t.id);
+      expect(t.priority, `${t.id} (${n})`).toBe(n >= 6 ? "alta" : n >= 3 ? "media" : "baixa");
+    }
+    for (const id of Object.keys(INCIDENCE))
+      expect(
+        TOPICS.some((t) => t.id === id),
+        id,
+      ).toBe(true);
+  });
+});
