@@ -4,8 +4,10 @@ import { Flame, Moon, Settings2, Sun, Sunrise, Sunset } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { BlockCard } from "@/components/BlockCard";
 import { Loading, Progress } from "@/components/ui-bits";
-import { CHECKLIST, MOTIVATION } from "@/lib/data";
-import { diffDays, fmtDay, isFinalWeek, todayISO } from "@/lib/planner";
+import { checklistFor } from "@/lib/checklist";
+import { MOTIVATION } from "@/lib/data";
+import { formatDays, resolveExam, type Edition } from "@/lib/editions";
+import { diffDays, fmtDay, isFinalWeek, PHASE_LABEL, phaseOf, todayISO } from "@/lib/planner";
 import { setTheme, skipToday, streakOf, toggleBlock, toggleCheck, useAppState } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
@@ -50,6 +52,8 @@ function Today() {
 
   if (!ready || !state.config) return <Loading />;
   const cfg = state.config;
+  const exam = resolveExam(cfg, today);
+  const edition = exam.edition;
   const daysLeft = diffDays(today, cfg.examDate);
   const final = daysLeft > 0 && isFinalWeek(today, cfg.examDate);
   const streak = streakOf(state.studied);
@@ -90,12 +94,22 @@ function Today() {
             {Math.max(daysLeft, 0)}
           </span>
           <span className="pb-2 text-lg font-semibold">
-            {daysLeft === 1 ? "dia" : "dias"} para o ENEM
+            {daysLeft === 1 ? "dia" : "dias"} para o ENEM{edition ? ` ${edition.year}` : ""}
           </span>
         </div>
+        <p className="mt-2 text-xs font-semibold opacity-80">
+          {edition
+            ? `${formatDays(edition.days)}${edition.status === "estimada" ? " · data estimada, a confirmar no edital do Inep" : ""}`
+            : `Data definida por você: ${fmtDay(cfg.examDate, { day: "numeric", month: "long", year: "numeric" })}`}
+        </p>
         <p className="mt-3 text-sm opacity-90">
           {daysLeft <= 0 ? "É hoje (ou já foi). Confie no que você estudou." : msg}
         </p>
+        {daysLeft > 0 && (
+          <p className="mt-1 text-xs font-semibold opacity-75">
+            Fase do plano: {PHASE_LABEL[phaseOf(today, cfg.examDate)]}
+          </p>
+        )}
         {cfg.goal && (
           <p className="mt-1 text-xs font-semibold opacity-75">
             Meta no ENEM: {cfg.goal} pontos (nota geral)
@@ -176,23 +190,38 @@ function Today() {
         </button>
       )}
 
-      {(final || daysLeft <= 0) && <ExamChecklist checked={state.checklist} />}
+      {(final || daysLeft <= 0) && <ExamChecklist checked={state.checklist} edition={edition} />}
     </div>
   );
 }
 
-function ExamChecklist({ checked }: { checked: Record<string, boolean> }) {
-  const n = CHECKLIST.filter((c) => checked[c.id]).length;
+function ExamChecklist({
+  checked,
+  edition,
+}: {
+  checked: Record<string, boolean>;
+  edition: Edition | null;
+}) {
+  const items = checklistFor(edition);
+  const n = items.filter((c) => checked[c.id]).length;
   return (
     <section className="card-soft mt-6 p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold">Checklist do dia da prova</h2>
         <span className="text-sm font-semibold text-muted-foreground">
-          {n}/{CHECKLIST.length}
+          {n}/{items.length}
         </span>
       </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {edition
+          ? edition.rulesFrom
+            ? `Regras da edição ${edition.rulesFrom}, usadas como referência até sair o edital de ${edition.year}.`
+            : `Regras do ENEM ${edition.year} (${edition.source}).`
+          : "Confira horários e regras no edital da sua edição."}{" "}
+        Itens marcados com “confirme no edital” podem mudar de um ano para outro.
+      </p>
       <ul className="mt-3 space-y-1">
-        {CHECKLIST.map((c) => (
+        {items.map((c) => (
           <li key={c.id}>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl p-2 hover:bg-muted">
               <input
@@ -205,11 +234,21 @@ function ExamChecklist({ checked }: { checked: Record<string, boolean> }) {
                 className={`text-sm ${checked[c.id] ? "text-muted-foreground line-through" : ""}`}
               >
                 <span className="font-semibold">{c.group}:</span> {c.label}
+                {c.edital && (
+                  <span className="ml-1.5 whitespace-nowrap rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+                    confirme no edital
+                  </span>
+                )}
               </span>
             </label>
           </li>
         ))}
       </ul>
+      {edition?.extra?.map((x) => (
+        <p key={x} className="mt-2 text-xs text-muted-foreground">
+          {x}
+        </p>
+      ))}
     </section>
   );
 }

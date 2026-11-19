@@ -409,35 +409,6 @@ export const brasilEscola = (q: string) =>
 export const INEP_PROVAS =
   "https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos";
 
-export const CHECKLIST = [
-  { id: "doc", group: "Documentos", label: "Documento oficial com foto (original)" },
-  { id: "cartao", group: "Documentos", label: "Cartão de confirmação impresso (recomendado)" },
-  {
-    id: "caneta",
-    group: "Material",
-    label: "Caneta esferográfica preta de tubo transparente (leve 2)",
-  },
-  { id: "garrafa", group: "Material", label: "Garrafa de água transparente, sem rótulo" },
-  {
-    id: "horario",
-    group: "Horário",
-    label: "Portões fecham 13h (horário de Brasília). Chegue até 12h",
-  },
-  { id: "trajeto", group: "Trajeto", label: "Conferi o local de prova e o tempo de deslocamento" },
-  {
-    id: "alim",
-    group: "Alimentação",
-    label: "Lanche leve separado (frutas, castanhas, chocolate)",
-  },
-  { id: "almoco", group: "Alimentação", label: "Almoço leve e conhecido antes da prova" },
-  { id: "sono", group: "Sono", label: "Dormir pelo menos 7h nas duas noites anteriores" },
-  {
-    id: "celular",
-    group: "Material",
-    label: "Celular desligado será lacrado no envelope porta-objetos",
-  },
-];
-
 export const MOTIVATION = [
   "Pouco por dia, todo dia. É assim que se chega lá.",
   "Uma questão a mais hoje é um ponto a mais na prova.",

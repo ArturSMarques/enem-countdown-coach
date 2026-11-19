@@ -4,7 +4,15 @@ import { useState } from "react";
 import { BlockCard } from "@/components/BlockCard";
 import { AreaTag, Chip, Loading, PageHeader } from "@/components/ui-bits";
 import { AREA_ORDER, AREAS, TOPIC_BY_ID } from "@/lib/data";
-import { addDays, diffDays, fmtDay, isFinalWeek, todayISO } from "@/lib/planner";
+import {
+  addDays,
+  diffDays,
+  fmtDay,
+  isFinalWeek,
+  PHASE_LABEL,
+  phaseOf,
+  todayISO,
+} from "@/lib/planner";
 import { moveBlock, recalc, toggleBlock, useAppState } from "@/lib/store";
 
 export const Route = createFileRoute("/cronograma")({
@@ -38,9 +46,20 @@ function Schedule() {
     return <PageHeader title="Cronograma" subtitle="Configure seu plano na aba Hoje." />;
   const today = todayISO();
   const total = Math.max(diffDays(today, state.config.examDate), 0);
-  const days = Array.from({ length: view === "semana" ? Math.min(7, total) : total }, (_, i) =>
+  // The plan is built HORIZON_DAYS ahead and extended as days go by.
+  const planned = Math.min(
+    total,
+    Math.max(
+      0,
+      ...Object.keys(state.plan)
+        .filter((d) => d >= today)
+        .map((d) => diffDays(today, d) + 1),
+    ),
+  );
+  const days = Array.from({ length: view === "semana" ? Math.min(7, total) : planned }, (_, i) =>
     addDays(today, i),
   );
+  const phase = PHASE_LABEL[phaseOf(today, state.config.examDate)];
 
   const onDrop = (day: string, e: React.DragEvent) => {
     e.preventDefault();
@@ -71,6 +90,11 @@ function Schedule() {
           Até a prova
         </Chip>
       </div>
+      <p className="mt-3 px-5 text-xs text-muted-foreground">
+        Fase atual: <strong>{phase}</strong>.
+        {total > planned &&
+          ` O plano está montado para as próximas ${Math.round(planned / 7)} semanas e se estende sozinho conforme os dias passam, com revisões espaçadas e simulado aos domingos.`}
+      </p>
       <div className="mt-3 flex flex-wrap gap-1.5 px-5">
         {AREA_ORDER.map((a) => (
           <AreaTag key={a} area={a} label={AREAS[a].name} />
