@@ -1,8 +1,13 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Area } from "./data";
+import { getEdition, resolveExam, targetEdition, yearOf, type DateMode } from "./editions";
+import { stagesByArea } from "./mastery";
 import {
   addDays,
   buildPlan,
+  diffDays,
+  dueReviews,
+  HORIZON_DAYS,
   redistribute,
   todayISO,
   weakSubjects,
@@ -11,7 +16,14 @@ import {
   type PerfEntry,
   type TopicStatus,
 } from "./planner";
-import { DAILY_COUNT, EXTRA_COUNT, pickQuestions, withQuizResult, type LevelChoice, type QuizAnswer } from "./quiz";
+import {
+  DAILY_COUNT,
+  EXTRA_COUNT,
+  pickQuestions,
+  withQuizResult,
+  type LevelChoice,
+  type QuizAnswer,
+} from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
 
 export type CustomLink = { id: string; title: string; url: string; area: Area };
@@ -29,10 +41,103 @@ export type State = {
   quiz: Record<string, QuizAnswer>;
   /** Question ids shown on each day (saved so the day's set does not change after answering). */
   quizDaily: Record<string, string[]>;
+  /** ENEM edition the checklist marks belong to; the checklist starts over in a new edition. */
+  checklistYear: number | null;
+  /** Format of the saved state. 1 (implicit) = before editions; 2 = editions and rolling plan. */
+  version: number;
 };
 
+/** The key keeps its old name: the format is versioned inside the saved object (see migrate). */
 const KEY = "reta-final-enem-v1";
-const EMPTY: State = { config: null, plan: {}, status: {}, perf: [], links: [], checklist: {}, studied: [], skipped: [], theme: null, quiz: {}, quizDaily: {} };
+export const STATE_VERSION = 2;
+const EMPTY: State = {
+  config: null,
+  plan: {},
+  status: {},
+  perf: [],
+  links: [],
+  checklist: {},
+  studied: [],
+  skipped: [],
+  theme: null,
+  quiz: {},
+  quizDaily: {},
+  checklistYear: null,
+  version: STATE_VERSION,
+};
+
+/**
+ * Upgrades a saved state to the current format without losing data. Version 1 stored a fixed exam
+ * date (the onboarding default was "2026-11-08"). A date already in the past becomes automatic (it
+ * follows the target edition); a future date that matches an edition keeps that edition; any other
+ * future date was typed by the student and stays manual.
+ */
+export function migrate(raw: unknown, today: string): State {
+  const saved = raw && typeof raw === "object" ? (raw as Partial<State>) : {};
+  let s: State = { ...EMPTY, ...saved, version: STATE_VERSION };
+  if ((saved.version ?? 1) < 2 && s.config) {
+    const exam = s.config.examDate;
+    let dateMode: DateMode = "manual";
+    let edition: number | undefined;
+    if (!exam || exam < today) dateMode = "auto";
+    else {
+      const ed = getEdition(yearOf(exam));
+      if (ed.days[0] === exam) {
+        if (ed.year === targetEdition(today).year) dateMode = "auto";
+        else {
+          dateMode = "edicao";
+          edition = ed.year;
+        }
+      }
+    }
+    s = { ...s, config: { ...s.config, dateMode, ...(edition ? { edition } : {}) } };
+  }
+  // Checklist marks saved before editions existed belong to the edition of the date saved back then.
+  if (s.checklistYear == null && s.config?.examDate)
+    s = { ...s, checklistYear: yearOf(s.config.examDate) };
+  return s;
+}
+
+/**
+ * Keeps a loaded state current: follows the target edition when the date is automatic (the plan is
+ * rebuilt from today when the exam date changes), starts the checklist over in a new edition and
+ * extends the rolling plan so there are always at least four weeks ahead.
+ */
+export function refresh(s: State, today: string): State {
+  if (!s.config) return s;
+  const exam = resolveExam(s.config, today);
+  let next = s;
+  if (exam.day1 !== s.config.examDate)
+    next = regenerate(s, { ...s.config, examDate: exam.day1 }, today);
+  const year = exam.edition?.year ?? yearOf(exam.day1);
+  if (next.checklistYear !== year) next = { ...next, checklist: {}, checklistYear: year };
+  return extendPlan(next, today);
+}
+
+/** Adds days to the end of the rolling plan when fewer than four weeks are left in it. */
+export function extendPlan(s: State, today: string): State {
+  const cfg = s.config;
+  if (!cfg) return s;
+  const lastExamEve = addDays(cfg.examDate, -1);
+  const planned = Object.keys(s.plan)
+    .filter((d) => d >= today && (s.plan[d]?.length ?? 0) > 0)
+    .sort();
+  const last = planned.at(-1);
+  if (last && (last >= lastExamEve || diffDays(today, last) >= 27)) return s;
+  const from = last ? addDays(last, 1) : today;
+  if (from > lastExamEve) return s;
+  const fresh = buildPlan({
+    cfg,
+    status: s.status,
+    perf: s.perf,
+    from,
+    until: addDays(today, HORIZON_DAYS - 1),
+    counts: doneCounts(s.plan, from),
+    reviews: dueReviews(s.plan, from),
+    stages: stagesByArea(s.quiz),
+  });
+  return { ...s, plan: { ...s.plan, ...fresh } };
+}
 
 let state: State = EMPTY;
 let loaded = false;
@@ -43,7 +148,11 @@ function load() {
   loaded = true;
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) state = { ...EMPTY, ...JSON.parse(raw) };
+    if (raw) {
+      const today = todayISO();
+      state = refresh(migrate(JSON.parse(raw), today), today);
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
   } catch {
     /* ignore */
   }
@@ -67,7 +176,11 @@ export function useAppState() {
     load();
     setReady(true);
   }, []);
-  const s = useSyncExternalStore(subscribe, () => (load(), state), () => EMPTY);
+  const s = useSyncExternalStore(
+    subscribe,
+    () => (load(), state),
+    () => EMPTY,
+  );
   return { state: ready ? s : EMPTY, ready };
 }
 
@@ -80,24 +193,38 @@ function doneCounts(plan: Record<string, Block[]>, before: string) {
 }
 
 /** Rebuilds the plan from today on (keeps the past; keeps today if something was already done). */
-export function regenerate(s: State, cfg = s.config): State {
+export function regenerate(s: State, cfg = s.config, today = todayISO()): State {
   if (!cfg) return s;
-  const today = todayISO();
   const keepToday = (s.plan[today] ?? []).some((b) => b.done);
   const from = keepToday ? addDays(today, 1) : today;
   const past = Object.fromEntries(Object.entries(s.plan).filter(([d]) => d < from));
-  const fresh = buildPlan({ cfg, status: s.status, perf: s.perf, from, counts: doneCounts(s.plan, from) });
+  const fresh = buildPlan({
+    cfg,
+    status: s.status,
+    perf: s.perf,
+    from,
+    counts: doneCounts(s.plan, from),
+    reviews: dueReviews(past, from),
+    stages: stagesByArea(s.quiz),
+  });
   return { ...s, config: cfg, plan: { ...past, ...fresh } };
 }
 
-export const saveConfig = (cfg: Config) => setState((s) => regenerate(s, cfg));
+export const saveConfig = (cfg: Config) =>
+  setState((s) => {
+    const today = todayISO();
+    const examDate = resolveExam(cfg, today).day1;
+    return refresh(regenerate(s, { ...cfg, examDate }, today), today);
+  });
 export const recalc = () => setState((s) => regenerate(s));
 
 export function toggleBlock(day: string, id: string) {
   setState((s) => {
     const blocks = (s.plan[day] ?? []).map((b) => (b.id === id ? { ...b, done: !b.done } : b));
     const any = blocks.some((b) => b.done);
-    const studied = any ? Array.from(new Set([...s.studied, day])) : s.studied.filter((d) => d !== day);
+    const studied = any
+      ? Array.from(new Set([...s.studied, day]))
+      : s.studied.filter((d) => d !== day);
     return { ...s, plan: { ...s.plan, [day]: blocks }, studied };
   });
 }
@@ -106,7 +233,11 @@ export function skipToday() {
   const today = todayISO();
   setState((s) => {
     if (!s.config) return s;
-    return { ...s, plan: redistribute(s.plan, today, s.config.examDate), skipped: Array.from(new Set([...s.skipped, today])) };
+    return {
+      ...s,
+      plan: redistribute(s.plan, today, s.config.examDate),
+      skipped: Array.from(new Set([...s.skipped, today])),
+    };
   });
 }
 
@@ -126,13 +257,21 @@ export function moveBlock(fromDay: string, id: string, toDay: string) {
   });
 }
 
-export const setTopicStatus = (id: string, st: TopicStatus) => setState((s) => ({ ...s, status: { ...s.status, [id]: st } }));
+export const setTopicStatus = (id: string, st: TopicStatus) =>
+  setState((s) => ({ ...s, status: { ...s.status, [id]: st } }));
 export const addPerf = (p: Omit<PerfEntry, "id" | "date">) =>
-  setState((s) => ({ ...s, perf: [...s.perf, { ...p, id: crypto.randomUUID(), date: todayISO() }] }));
-export const removePerf = (id: string) => setState((s) => ({ ...s, perf: s.perf.filter((p) => p.id !== id) }));
-export const addLink = (l: Omit<CustomLink, "id">) => setState((s) => ({ ...s, links: [...s.links, { ...l, id: crypto.randomUUID() }] }));
-export const removeLink = (id: string) => setState((s) => ({ ...s, links: s.links.filter((l) => l.id !== id) }));
-export const toggleCheck = (id: string) => setState((s) => ({ ...s, checklist: { ...s.checklist, [id]: !s.checklist[id] } }));
+  setState((s) => ({
+    ...s,
+    perf: [...s.perf, { ...p, id: crypto.randomUUID(), date: todayISO() }],
+  }));
+export const removePerf = (id: string) =>
+  setState((s) => ({ ...s, perf: s.perf.filter((p) => p.id !== id) }));
+export const addLink = (l: Omit<CustomLink, "id">) =>
+  setState((s) => ({ ...s, links: [...s.links, { ...l, id: crypto.randomUUID() }] }));
+export const removeLink = (id: string) =>
+  setState((s) => ({ ...s, links: s.links.filter((l) => l.id !== id) }));
+export const toggleCheck = (id: string) =>
+  setState((s) => ({ ...s, checklist: { ...s.checklist, [id]: !s.checklist[id] } }));
 export const setTheme = (theme: "light" | "dark") => setState((s) => ({ ...s, theme }));
 
 // ---------- questions ----------
@@ -153,6 +292,7 @@ export function ensureDailyQuiz(day: string) {
       answered: new Set(Object.keys(s.quiz)),
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
+      stages: stagesByArea(s.quiz),
     });
     return { ...s, quizDaily: { ...s.quizDaily, [day]: ids } };
   });
@@ -170,6 +310,7 @@ export function moreQuestions(day: string, level: LevelChoice = "mix") {
       exclude: new Set(current),
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
+      stages: stagesByArea(s.quiz),
     });
     if (!ids.length) return s;
     return { ...s, quizDaily: { ...s.quizDaily, [day]: [...current, ...ids] } };
@@ -182,7 +323,13 @@ export function answerQuestion(id: string, choice: number) {
   const day = todayISO();
   setState((s) => {
     if (s.quiz[id]) return s;
-    const perf = withQuizResult(s.perf, questionSubject(question), choice === question.answer, day, crypto.randomUUID());
+    const perf = withQuizResult(
+      s.perf,
+      questionSubject(question),
+      choice === question.answer,
+      day,
+      crypto.randomUUID(),
+    );
     return { ...s, quiz: { ...s.quiz, [id]: { choice, day } }, perf };
   });
 }

@@ -1,7 +1,15 @@
 import type { ReactNode } from "react";
 import { AREAS, type Area } from "@/lib/data";
 
-export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  right,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: ReactNode;
+}) {
   return (
     <header className="flex items-start justify-between gap-3 px-5 pb-4 pt-6">
       <div>
@@ -16,14 +24,24 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
 export function AreaTag({ area, label }: { area: Area; label?: string }) {
   const a = AREAS[area];
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${a.soft} ${a.color}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${a.soft} ${a.color}`}
+    >
       <span className={`h-1.5 w-1.5 rounded-full ${a.dot}`} />
       {label ?? a.short}
     </span>
   );
 }
 
-export function Chip({ active, onClick, children }: { active?: boolean; onClick?: () => void; children: ReactNode }) {
+export function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active?: boolean;
+  onClick?: () => void;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -38,7 +56,10 @@ export function Chip({ active, onClick, children }: { active?: boolean; onClick?
 export function Progress({ value }: { value: number }) {
   return (
     <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-      <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${Math.round(value * 100)}%` }} />
+      <div
+        className="h-full rounded-full bg-primary transition-[width] duration-500"
+        style={{ width: `${Math.round(value * 100)}%` }}
+      />
     </div>
   );
 }

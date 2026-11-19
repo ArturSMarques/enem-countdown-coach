@@ -1,5 +1,5 @@
-import { TOPIC_BY_ID, type Priority } from "./data";
-import type { PerfEntry } from "./planner";
+import { TOPIC_BY_ID, type Area, type Priority } from "./data";
+import type { PerfEntry, Stage } from "./planner";
 import type { Level } from "./question-types";
 import { QUESTIONS, questionSubject, type Question } from "./questions";
 
@@ -45,18 +45,38 @@ export function pickQuestions(opts: {
   exclude?: ReadonlySet<string>;
   planTopics?: ReadonlySet<string>;
   weakSubjects?: ReadonlySet<string>;
+  /** Per-area stage (see mastery.ts): "base" favors easy questions, "avancado" favors hard ones. */
+  stages?: Partial<Record<Area, Stage>>;
   bank?: Question[];
 }): string[] {
-  const { day, count, answered, level = "mix", exclude = new Set(), planTopics = new Set(), weakSubjects = new Set() } = opts;
+  const {
+    day,
+    count,
+    answered,
+    level = "mix",
+    exclude = new Set(),
+    planTopics = new Set(),
+    weakSubjects = new Set(),
+  } = opts;
   const rand = seededRandom(`${day}:${exclude.size}:${level}`);
   const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id));
+  const stageBonus = (x: Question) => {
+    const stage = opts.stages?.[TOPIC_BY_ID[x.topicId]?.area ?? "red"];
+    if (stage === "base") return x.level === "facil" ? 2.5 : x.level === "dificil" ? -1 : 0;
+    if (stage === "avancado") return x.level === "dificil" ? 2.5 : x.level === "facil" ? -1 : 0;
+    return 0;
+  };
   const score = (x: Question) =>
+    stageBonus(x) +
     (planTopics.has(x.topicId) ? 3 : 0) +
     (weakSubjects.has(questionSubject(x)) ? 2 : 0) +
     PRI[TOPIC_BY_ID[x.topicId]?.priority ?? "baixa"] +
     rand() * 2;
   const ranked = (list: Question[]) =>
-    list.map((x) => ({ x, s: score(x) })).sort((a, b) => b.s - a.s).map((r) => r.x);
+    list
+      .map((x) => ({ x, s: score(x) }))
+      .sort((a, b) => b.s - a.s)
+      .map((r) => r.x);
   const fresh = pool.filter((x) => !answered.has(x.id));
   const old = pool.filter((x) => answered.has(x.id));
 
@@ -100,8 +120,20 @@ export function optionOrder(question: Question): number[] {
 }
 
 /** Adds one answered question to the day's "questões do dia" line in the performance history. */
-export function withQuizResult(perf: PerfEntry[], subject: string, correct: boolean, day: string, id: string): PerfEntry[] {
+export function withQuizResult(
+  perf: PerfEntry[],
+  subject: string,
+  correct: boolean,
+  day: string,
+  id: string,
+): PerfEntry[] {
   const i = perf.findIndex((p) => p.source === "quiz" && p.date === day && p.subject === subject);
-  if (i < 0) return [...perf, { id, date: day, subject, total: 1, correct: correct ? 1 : 0, source: "quiz" }];
-  return perf.map((p, j) => (j === i ? { ...p, total: p.total + 1, correct: p.correct + (correct ? 1 : 0) } : p));
+  if (i < 0)
+    return [
+      ...perf,
+      { id, date: day, subject, total: 1, correct: correct ? 1 : 0, source: "quiz" },
+    ];
+  return perf.map((p, j) =>
+    j === i ? { ...p, total: p.total + 1, correct: p.correct + (correct ? 1 : 0) } : p,
+  );
 }

@@ -3,18 +3,37 @@ import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ExternalResourceLink as A } from "@/components/ExternalResourceLink";
 import { AreaTag, Chip, Loading, PageHeader } from "@/components/ui-bits";
-import { AREA_ORDER, AREAS, CHANNELS_BY_SUBJECT, TOPICS, TOPIC_BY_ID, brasilEscola, todaMateria, ytChannel, ytSearch, type Area } from "@/lib/data";
+import {
+  AREA_ORDER,
+  AREAS,
+  CHANNELS_BY_SUBJECT,
+  TOPICS,
+  TOPIC_BY_ID,
+  brasilEscola,
+  todaMateria,
+  ytChannel,
+  ytSearch,
+  type Area,
+} from "@/lib/data";
 import { addLink, removeLink, useAppState } from "@/lib/store";
 import { normalizeResourceURL } from "@/lib/youtube";
 
 export const Route = createFileRoute("/aulas")({
-  validateSearch: (s: Record<string, unknown>): { topic?: string | undefined } => ({ topic: typeof s["topic"] === "string" ? s["topic"] : undefined }),
+  validateSearch: (s: Record<string, unknown>): { topic?: string | undefined } => ({
+    topic: typeof s["topic"] === "string" ? s["topic"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Aulas e criadores — Reta Final ENEM" },
-      { name: "description", content: "Canais gratuitos recomendados para cada tópico do ENEM, e seus próprios links." },
+      {
+        name: "description",
+        content: "Canais gratuitos recomendados para cada tópico do ENEM, e seus próprios links.",
+      },
       { property: "og:title", content: "Aulas gratuitas para o ENEM" },
-      { property: "og:description", content: "Ferretto, Equaciona, Me Salva!, Descomplica, Biologia Total, Boaro e mais." },
+      {
+        property: "og:description",
+        content: "Ferretto, Equaciona, Me Salva!, Descomplica, Biologia Total, Boaro e mais.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -25,7 +44,7 @@ export const Route = createFileRoute("/aulas")({
 function Lessons() {
   const { topic } = Route.useSearch();
   const { state, ready } = useAppState();
-  const [area, setArea] = useState<Area>(topic ? TOPIC_BY_ID[topic]?.area ?? "mat" : "mat");
+  const [area, setArea] = useState<Area>(topic ? (TOPIC_BY_ID[topic]?.area ?? "mat") : "mat");
   const [open, setOpen] = useState<string | null>(topic ?? null);
   const [form, setForm] = useState({ title: "", url: "" });
   const [formError, setFormError] = useState("");
@@ -35,27 +54,40 @@ function Lessons() {
 
   return (
     <div>
-      <PageHeader title="Aulas e criadores" subtitle="Links de busca e canais — não quebram com o tempo." />
+      <PageHeader
+        title="Aulas e criadores"
+        subtitle="Links de busca e canais — não quebram com o tempo."
+      />
       <div className="flex gap-2 overflow-x-auto px-5 pb-1">
-        {AREA_ORDER.map((a) => <Chip key={a} active={area === a} onClick={() => setArea(a)}>{AREAS[a].name}</Chip>)}
+        {AREA_ORDER.map((a) => (
+          <Chip key={a} active={area === a} onClick={() => setArea(a)}>
+            {AREAS[a].name}
+          </Chip>
+        ))}
       </div>
 
       <div className="mt-4 space-y-2 px-5">
         {list.map((t) => (
           <div key={t.id} className="card-soft p-3.5">
-            <button onClick={() => setOpen(open === t.id ? null : t.id)} className="flex w-full items-center justify-between gap-2 text-left">
+            <button
+              onClick={() => setOpen(open === t.id ? null : t.id)}
+              className="flex w-full items-center justify-between gap-2 text-left"
+            >
               <span className="font-semibold">{t.name}</span>
               <AreaTag area={t.area} label={t.subject} />
             </button>
             {open === t.id && (
               <ul className="animate-in fade-in mt-3 space-y-2.5 text-sm">
                 {(CHANNELS_BY_SUBJECT[t.subject] ?? []).map((c) => (
-                  <li key={c.name} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <li
+                    key={c.name}
+                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+                  >
                     <span>
                       <span className="font-semibold">{c.name}</span>
                       <span className="block text-xs text-muted-foreground">{c.desc}</span>
                     </span>
-                      <span className="flex min-w-0 max-w-full flex-wrap gap-3 text-xs">
+                    <span className="flex min-w-0 max-w-full flex-wrap gap-3 text-xs">
                       <A href={ytSearch(`${c.name} ${t.name} ENEM`)}>Buscar aula</A>
                       <A href={ytChannel(c.name)}>Canal</A>
                     </span>
@@ -78,12 +110,20 @@ function Lessons() {
           {mine.map((l) => (
             <li key={l.id} className="flex items-center justify-between gap-2 text-sm">
               <A href={l.url}>{l.title}</A>
-              <button aria-label="Remover" onClick={() => removeLink(l.id)} className="p-1 text-muted-foreground hover:text-destructive">
+              <button
+                aria-label="Remover"
+                onClick={() => removeLink(l.id)}
+                className="p-1 text-muted-foreground hover:text-destructive"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             </li>
           ))}
-          {mine.length === 0 && <li className="text-xs text-muted-foreground">Adicione canais ou playlists que você gosta.</li>}
+          {mine.length === 0 && (
+            <li className="text-xs text-muted-foreground">
+              Adicione canais ou playlists que você gosta.
+            </li>
+          )}
         </ul>
         <form
           className="mt-3 space-y-2"
@@ -99,9 +139,23 @@ function Lessons() {
             setForm({ title: "", url: "" });
           }}
         >
-          <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Nome (ex.: Canal do Fulano)" className="w-full rounded-xl border bg-background px-3 py-2 text-sm" />
-          <input value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://…" className="w-full rounded-xl border bg-background px-3 py-2 text-sm" />
-          {formError && <p role="alert" className="text-xs text-destructive">{formError}</p>}
+          <input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Nome (ex.: Canal do Fulano)"
+            className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            value={form.url}
+            onChange={(e) => setForm({ ...form, url: e.target.value })}
+            placeholder="https://…"
+            className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+          />
+          {formError && (
+            <p role="alert" className="text-xs text-destructive">
+              {formError}
+            </p>
+          )}
           <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground">
             <Plus className="h-4 w-4" /> Adicionar link
           </button>

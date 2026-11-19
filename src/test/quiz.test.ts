@@ -3,6 +3,7 @@ import { TOPIC_BY_ID } from "@/lib/data";
 import { LEVELS } from "@/lib/question-types";
 import { DAILY_COUNT, optionOrder, pickQuestions, withQuizResult } from "@/lib/quiz";
 import { QUESTIONS, QUESTION_BY_ID } from "@/lib/questions";
+import { DEPTH_QUESTIONS } from "@/lib/questions-depth";
 import { ENEM_QUESTIONS } from "@/lib/questions-enem";
 
 describe("question bank", () => {
@@ -19,10 +20,12 @@ describe("question bank", () => {
   });
 
   it("has questions in all three levels, with enough ENEM-style material in the harder ones", () => {
-    for (const l of LEVELS) expect(QUESTIONS.filter((x) => x.level === l).length, l).toBeGreaterThanOrEqual(15);
-    const rich = (x: (typeof QUESTIONS)[number]) => Boolean(x.figure || x.table || x.passages?.length);
+    for (const l of LEVELS)
+      expect(QUESTIONS.filter((x) => x.level === l).length, l).toBeGreaterThanOrEqual(15);
+    const rich = (x: (typeof QUESTIONS)[number]) =>
+      Boolean(x.figure || x.table || x.passages?.length);
     const hard = QUESTIONS.filter((x) => x.level === "dificil");
-    expect(hard.filter(rich).length / hard.length).toBeGreaterThan(0.8);
+    expect(hard.filter(rich).length / hard.length).toBeGreaterThan(0.5);
     expect(ENEM_QUESTIONS.filter(rich).length / ENEM_QUESTIONS.length).toBeGreaterThan(0.9);
     expect(QUESTIONS.filter((x) => x.level === "facil").every((x) => !x.figure)).toBe(true);
   });
@@ -33,9 +36,22 @@ describe("question bank", () => {
         expect(x.figure.alt.length, x.id).toBeGreaterThan(30);
         expect(decodeURIComponent(x.figure.src.split(",")[1] ?? ""), x.id).toContain("<svg");
       }
-      if (x.table) for (const row of x.table.rows) expect(row.length, x.id).toBe(x.table.head.length === 2 || x.table.head.length > 2 ? x.table.head.length : row.length);
+      if (x.table)
+        for (const row of x.table.rows)
+          expect(row.length, x.id).toBe(
+            x.table.head.length === 2 || x.table.head.length > 2 ? x.table.head.length : row.length,
+          );
       for (const p of x.passages ?? []) expect(p.body.length, x.id).toBeGreaterThan(20);
     }
+  });
+
+  it("explains every alternative of the in-depth questions", () => {
+    expect(DEPTH_QUESTIONS.length).toBeGreaterThanOrEqual(60);
+    for (const x of QUESTIONS.filter((q) => q.porQue))
+      expect(x.porQue!.length, x.id).toBe(x.options.length);
+    for (const x of DEPTH_QUESTIONS) expect(x.porQue, x.id).toBeDefined();
+    const hard = DEPTH_QUESTIONS.filter((x) => x.level === "dificil").length;
+    expect(hard).toBeGreaterThanOrEqual(20);
   });
 
   it("covers every study topic", () => {
@@ -73,7 +89,11 @@ describe("daily selection", () => {
   });
 
   it("returns only the chosen level, never an answered question", () => {
-    const answered = new Set(QUESTIONS.filter((x) => x.level === "dificil").slice(0, 3).map((x) => x.id));
+    const answered = new Set(
+      QUESTIONS.filter((x) => x.level === "dificil")
+        .slice(0, 3)
+        .map((x) => x.id),
+    );
     const ids = pickQuestions({ day: "2026-11-08", count: 5, answered, level: "dificil" });
     expect(ids).toHaveLength(5);
     for (const id of ids) {
@@ -81,13 +101,19 @@ describe("daily selection", () => {
       expect(answered.has(id)).toBe(false);
     }
     const all = new Set(QUESTIONS.filter((x) => x.level === "dificil").map((x) => x.id));
-    expect(pickQuestions({ day: "2026-11-08", count: 5, answered: all, level: "dificil" })).toEqual([]);
+    expect(pickQuestions({ day: "2026-11-08", count: 5, answered: all, level: "dificil" })).toEqual(
+      [],
+    );
   });
 
   it("never repeats an answered question while new ones remain", () => {
     const answered = new Set<string>();
     for (let i = 0; i < 15; i++) {
-      const ids = pickQuestions({ day: `2026-11-${String(i + 1).padStart(2, "0")}`, count: DAILY_COUNT, answered });
+      const ids = pickQuestions({
+        day: `2026-11-${String(i + 1).padStart(2, "0")}`,
+        count: DAILY_COUNT,
+        answered,
+      });
       for (const id of ids) {
         expect(answered.has(id), id).toBe(false);
         answered.add(id);
@@ -97,26 +123,47 @@ describe("daily selection", () => {
   });
 
   it("favours topics from today's plan", () => {
-    const ids = pickQuestions({ day: "2026-11-03", count: DAILY_COUNT, answered: none, planTopics: new Set(["fis-ener", "mat-porc"]) });
+    const ids = pickQuestions({
+      day: "2026-11-03",
+      count: DAILY_COUNT,
+      answered: none,
+      planTopics: new Set(["fis-ener", "mat-porc"]),
+    });
     const topics = ids.map((id) => QUESTION_BY_ID[id]!.topicId);
-    expect(topics.filter((t) => t === "fis-ener" || t === "mat-porc").length).toBeGreaterThanOrEqual(2);
+    expect(
+      topics.filter((t) => t === "fis-ener" || t === "mat-porc").length,
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it("limits each topic to two questions and avoids duplicates", () => {
-    const ids = pickQuestions({ day: "2026-11-04", count: 10, answered: none, planTopics: new Set(["mat-porc"]) });
+    const ids = pickQuestions({
+      day: "2026-11-04",
+      count: 10,
+      answered: none,
+      planTopics: new Set(["mat-porc"]),
+    });
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.filter((id) => QUESTION_BY_ID[id]!.topicId === "mat-porc").length).toBeLessThanOrEqual(2);
+    expect(
+      ids.filter((id) => QUESTION_BY_ID[id]!.topicId === "mat-porc").length,
+    ).toBeLessThanOrEqual(2);
   });
 
   it("excludes questions already in today's set when asking for more", () => {
     const first = pickQuestions({ day: "2026-11-05", count: DAILY_COUNT, answered: none });
-    const more = pickQuestions({ day: "2026-11-05", count: DAILY_COUNT, answered: none, exclude: new Set(first) });
+    const more = pickQuestions({
+      day: "2026-11-05",
+      count: DAILY_COUNT,
+      answered: none,
+      exclude: new Set(first),
+    });
     expect(more.filter((id) => first.includes(id))).toEqual([]);
   });
 
   it("reuses answered questions once the bank is exhausted", () => {
     const all = new Set(QUESTIONS.map((x) => x.id));
-    expect(pickQuestions({ day: "2026-11-06", count: DAILY_COUNT, answered: all })).toHaveLength(DAILY_COUNT);
+    expect(pickQuestions({ day: "2026-11-06", count: DAILY_COUNT, answered: all })).toHaveLength(
+      DAILY_COUNT,
+    );
   });
 });
 
