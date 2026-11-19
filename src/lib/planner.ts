@@ -2,7 +2,14 @@ import { TOPICS, SUBJECTS, type Area, type Topic } from "./data";
 
 export type Shift = "manha" | "noite";
 export type Activity = "Videoaula" | "Questões" | "Revisão" | "Redação" | "Resumo" | "Simulado";
-export type Block = { id: string; topicId: string; activity: Activity; minutes: number; shift: Shift; done: boolean };
+export type Block = {
+  id: string;
+  topicId: string;
+  activity: Activity;
+  minutes: number;
+  shift: Shift;
+  done: boolean;
+};
 export type TopicStatus = "dominado" | "revisar" | "nao";
 export type Difficulty = Record<"ling" | "mat" | "nat" | "hum", number>;
 export type Config = {
@@ -41,11 +48,14 @@ const ymd = (iso: string): [number, number, number] => {
   const [y = 0, m = 1, d = 1] = iso.split("-").map(Number);
   return [y, m - 1, d];
 };
-export const fmtDay = (iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "2-digit", month: "2-digit" }) =>
-  parse(iso).toLocaleDateString("pt-BR", opts);
+export const fmtDay = (
+  iso: string,
+  opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "2-digit", month: "2-digit" },
+) => parse(iso).toLocaleDateString("pt-BR", opts);
 
 export const FINAL_WEEK_DAYS = 7;
-export const isFinalWeek = (day: string, examDate: string) => diffDays(day, examDate) <= FINAL_WEEK_DAYS;
+export const isFinalWeek = (day: string, examDate: string) =>
+  diffDays(day, examDate) <= FINAL_WEEK_DAYS;
 
 // ---------- block sizes: 25 to 50 minutes ----------
 export function splitMinutes(total: number): number[] {
@@ -77,19 +87,33 @@ export function weakSubjects(perf: PerfEntry[]) {
     .sort((a, b) => a.rate - b.rate);
 }
 
-export function topicScore(topic: Topic, cfg: Config, status: Record<string, TopicStatus>, weak: Set<string>) {
+export function topicScore(
+  topic: Topic,
+  cfg: Config,
+  status: Record<string, TopicStatus>,
+  weak: Set<string>,
+) {
   const diff = topic.area === "red" ? Math.max(cfg.difficulty.ling, 3) : cfg.difficulty[topic.area];
   const st = status[topic.id] ?? "nao";
-  return PRI[topic.priority] * AREA_W[topic.area] * (0.6 + diff * 0.2) * ST_W[st] * (weak.has(topic.subject) ? 1.4 : 1);
+  return (
+    PRI[topic.priority] *
+    AREA_W[topic.area] *
+    (0.6 + diff * 0.2) *
+    ST_W[st] *
+    (weak.has(topic.subject) ? 1.4 : 1)
+  );
 }
 
 export function rankedTopics(cfg: Config, status: Record<string, TopicStatus>, perf: PerfEntry[]) {
   const weak = new Set(weakSubjects(perf).map((w) => w.subject));
-  return TOPICS.map((tp) => ({ topic: tp, score: topicScore(tp, cfg, status, weak) })).sort((a, b) => b.score - a.score);
+  return TOPICS.map((tp) => ({ topic: tp, score: topicScore(tp, cfg, status, weak) })).sort(
+    (a, b) => b.score - a.score,
+  );
 }
 
 let uid = 0;
-const newId = () => `b${Date.now().toString(36)}${(uid++).toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+const newId = () =>
+  `b${Date.now().toString(36)}${(uid++).toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 export function buildPlan(opts: {
   cfg: Config;
@@ -114,7 +138,10 @@ export function buildPlan(opts: {
     for (const r of list) {
       let v = r.score / (1 + (counts[r.topic.id] ?? 0));
       if (r.topic.area === lastArea) v *= 0.5;
-      if (v > bestV) { bestV = v; best = r; }
+      if (v > bestV) {
+        bestV = v;
+        best = r;
+      }
     }
     counts[best.topic.id] = (counts[best.topic.id] ?? 0) + 1;
     lastArea = best.topic.area;
@@ -125,21 +152,37 @@ export function buildPlan(opts: {
     const day = addDays(from, i);
     const final = isFinalWeek(day, cfg.examDate);
     const slots: { shift: Shift; minutes: number }[] = [];
-    for (const s of shifts) for (const m of splitMinutes((cfg.hours * 60) / shifts.length)) slots.push({ shift: s, minutes: m });
+    for (const s of shifts)
+      for (const m of splitMinutes((cfg.hours * 60) / shifts.length))
+        slots.push({ shift: s, minutes: m });
 
     const redSlot = final || i % 3 === 0 ? slots.length - 1 : -1;
     const simSlot = final && i % 2 === 1 && slots.length > 1 ? 0 : -1;
     plan[day] = slots.map((slot, idx) => {
       if (idx === redSlot) {
         const tp = pick(redPool);
-        return { id: newId(), topicId: tp.id, activity: "Redação", minutes: slot.minutes, shift: slot.shift, done: false };
+        return {
+          id: newId(),
+          topicId: tp.id,
+          activity: "Redação",
+          minutes: slot.minutes,
+          shift: slot.shift,
+          done: false,
+        };
       }
       const tp = pick(pool);
       const c = counts[tp.id] ?? 0;
       let activity: Activity;
       if (final) activity = idx === simSlot ? "Simulado" : c % 2 ? "Revisão" : "Resumo";
       else activity = c === 1 ? "Videoaula" : c === 2 ? "Questões" : c % 2 ? "Revisão" : "Questões";
-      return { id: newId(), topicId: tp.id, activity, minutes: slot.minutes, shift: slot.shift, done: false };
+      return {
+        id: newId(),
+        topicId: tp.id,
+        activity,
+        minutes: slot.minutes,
+        shift: slot.shift,
+        done: false,
+      };
     });
   }
   return plan;

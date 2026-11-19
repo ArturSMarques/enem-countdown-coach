@@ -34,13 +34,24 @@ export function QuestionCard({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-xs font-bold text-muted-foreground">Questão {index + 1}</span>
         <AreaTag area={topic.area} label={topic.subject} />
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${LEVEL_STYLE[question.level]}`}>{LEVEL_LABEL[question.level]}</span>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${LEVEL_STYLE[question.level]}`}
+        >
+          {LEVEL_LABEL[question.level]}
+        </span>
         <span className="text-[11px] font-semibold text-muted-foreground">{topic.name}</span>
       </div>
 
       {question.passages?.map((p, i) => (
-        <blockquote key={i} className="mt-3 rounded-xl border-l-4 border-border bg-muted/60 p-3 text-sm leading-relaxed">
-          {p.label && <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{p.label}</p>}
+        <blockquote
+          key={i}
+          className="mt-3 rounded-xl border-l-4 border-border bg-muted/60 p-3 text-sm leading-relaxed"
+        >
+          {p.label && (
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {p.label}
+            </p>
+          )}
           <p className="whitespace-pre-line">{p.body}</p>
           {p.source && <p className="mt-1.5 text-[11px] text-muted-foreground">{p.source}</p>}
         </blockquote>
@@ -48,8 +59,17 @@ export function QuestionCard({
 
       {question.figure && (
         <figure className="mt-3">
-          <img src={question.figure.src} alt={question.figure.alt} loading="lazy" className="mx-auto w-full max-w-md rounded-xl border bg-white" />
-          {question.figure.caption && <figcaption className="mt-1 text-[11px] text-muted-foreground">{question.figure.caption}</figcaption>}
+          <img
+            src={question.figure.src}
+            alt={question.figure.alt}
+            loading="lazy"
+            className="mx-auto w-full max-w-md rounded-xl border bg-white"
+          />
+          {question.figure.caption && (
+            <figcaption className="mt-1 text-[11px] text-muted-foreground">
+              {question.figure.caption}
+            </figcaption>
+          )}
         </figure>
       )}
 
@@ -57,24 +77,42 @@ export function QuestionCard({
         <div className="mt-3">
           <div className="overflow-x-auto rounded-xl border">
             <table className="w-full min-w-max text-left text-xs">
-              {question.table.caption && <caption className="bg-muted/60 px-3 py-2 text-left text-xs font-bold">{question.table.caption}</caption>}
+              {question.table.caption && (
+                <caption className="bg-muted/60 px-3 py-2 text-left text-xs font-bold">
+                  {question.table.caption}
+                </caption>
+              )}
               <thead>
                 <tr className="bg-muted/60">
                   {question.table.head.map((h, i) => (
-                    <th key={i} scope="col" className="px-3 py-2 font-bold">{h}</th>
+                    <th key={i} scope="col" className="px-3 py-2 font-bold">
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {question.table.rows.map((row, i) => (
                   <tr key={i} className="border-t">
-                    {row.map((cell, j) => (j === 0 ? <th key={j} scope="row" className="px-3 py-2 font-semibold">{cell}</th> : <td key={j} className="px-3 py-2">{cell}</td>))}
+                    {row.map((cell, j) =>
+                      j === 0 ? (
+                        <th key={j} scope="row" className="px-3 py-2 font-semibold">
+                          {cell}
+                        </th>
+                      ) : (
+                        <td key={j} className="px-3 py-2">
+                          {cell}
+                        </td>
+                      ),
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {question.table.note && <p className="mt-1 text-[11px] text-muted-foreground">{question.table.note}</p>}
+          {question.table.note && (
+            <p className="mt-1 text-[11px] text-muted-foreground">{question.table.note}</p>
+          )}
         </div>
       )}
 
@@ -100,7 +138,13 @@ export function QuestionCard({
                 className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${tone}`}
               >
                 <span className="mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold">
-                  {answered && right ? <Check className="h-3.5 w-3.5 text-success" /> : answered && picked ? <X className="h-3.5 w-3.5 text-destructive" /> : LETTERS[position]}
+                  {answered && right ? (
+                    <Check className="h-3.5 w-3.5 text-success" />
+                  ) : answered && picked ? (
+                    <X className="h-3.5 w-3.5 text-destructive" />
+                  ) : (
+                    LETTERS[position]
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">{question.options[original]}</span>
               </button>
@@ -110,10 +154,16 @@ export function QuestionCard({
       </ul>
       {answered && (
         <div role="status" className="animate-in fade-in mt-3 rounded-xl bg-muted p-3 text-sm">
-          <p className={`font-bold ${hit ? "text-success" : "text-destructive"}`}>{hit ? "Você acertou!" : "Não foi dessa vez."}</p>
+          <p className={`font-bold ${hit ? "text-success" : "text-destructive"}`}>
+            {hit ? "Você acertou!" : "Não foi dessa vez."}
+          </p>
           <p className="mt-1 text-muted-foreground">{question.why}</p>
           {!hit && (
-            <Link to="/aulas" search={{ topic: topic.id }} className="mt-2 inline-flex items-center gap-1.5 font-semibold text-primary">
+            <Link
+              to="/aulas"
+              search={{ topic: topic.id }}
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-primary"
+            >
               <PlayCircle className="h-4 w-4" /> Rever aulas de {topic.name}
             </Link>
           )}

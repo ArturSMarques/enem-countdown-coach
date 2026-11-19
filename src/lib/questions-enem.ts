@@ -128,8 +128,22 @@ export const ENEM_QUESTIONS: Question[] = [
         x: { min: 0, max: 80, step: 20, label: "Minutos usados por mês" },
         y: { min: 0, max: 100, step: 20, label: "Custo (R$)" },
         series: [
-          { name: "Plano A", points: [[0, 30], [80, 70]], color: "#2f6fb3" },
-          { name: "Plano B", points: [[0, 10], [80, 90]], color: "#e08a1e" },
+          {
+            name: "Plano A",
+            points: [
+              [0, 30],
+              [80, 70],
+            ],
+            color: "#2f6fb3",
+          },
+          {
+            name: "Plano B",
+            points: [
+              [0, 10],
+              [80, 90],
+            ],
+            color: "#e08a1e",
+          },
         ],
       }),
       "Gráfico de duas retas. O plano A começa em R$ 30 e chega a R$ 70 com 80 minutos. O plano B começa em R$ 10 e chega a R$ 90 com 80 minutos. As retas se cruzam em 40 minutos, no custo de R$ 50.",
@@ -148,7 +162,10 @@ export const ENEM_QUESTIONS: Question[] = [
   e({
     id: "mat-geop-4",
     level: "media",
-    figure: toFigure(lShapedLot(), "Planta de um terreno em formato de L. A parte de cima mede 20 m, o recorte no canto superior direito mede 10 m por 8 m, a lateral direita mede 12 m, a base mede 30 m e a lateral esquerda mede 20 m."),
+    figure: toFigure(
+      lShapedLot(),
+      "Planta de um terreno em formato de L. A parte de cima mede 20 m, o recorte no canto superior direito mede 10 m por 8 m, a lateral direita mede 12 m, a base mede 30 m e a lateral esquerda mede 20 m.",
+    ),
     text: "O terreno da planta será vendido a R$ 150,00 o metro quadrado. Qual é o valor total do terreno?",
     options: ["R$ 12.000,00", "R$ 72.000,00", "R$ 78.000,00", "R$ 90.000,00", "R$ 105.000,00"],
     answer: 2,
@@ -188,7 +205,10 @@ export const ENEM_QUESTIONS: Question[] = [
           {
             name: "Lucro",
             color: "#2f6fb3",
-            points: Array.from({ length: 13 }, (_, i) => [i * 5, -((i * 5) ** 2) + 60 * i * 5 - 500] as [number, number]),
+            points: Array.from(
+              { length: 13 },
+              (_, i) => [i * 5, -((i * 5) ** 2) + 60 * i * 5 - 500] as [number, number],
+            ),
             markers: true,
           },
         ],
@@ -236,12 +256,30 @@ export const ENEM_QUESTIONS: Question[] = [
         title: "Velocidade do trem × tempo",
         x: { min: 0, max: 20, step: 5, label: "Tempo (s)" },
         y: { min: 0, max: 25, step: 5, label: "Velocidade (m/s)" },
-        series: [{ name: "Trem", points: [[0, 0], [5, 20], [15, 20], [20, 0]], color: "#2f6fb3", markers: true }],
+        series: [
+          {
+            name: "Trem",
+            points: [
+              [0, 0],
+              [5, 20],
+              [15, 20],
+              [20, 0],
+            ],
+            color: "#2f6fb3",
+            markers: true,
+          },
+        ],
       }),
       "Gráfico da velocidade em função do tempo: sobe em linha reta de 0 a 20 m/s entre 0 e 5 s, fica constante em 20 m/s entre 5 e 15 s e desce em linha reta até 0 entre 15 e 20 s.",
     ),
     text: "O gráfico mostra a velocidade de um trem em função do tempo no trajeto entre duas estações vizinhas. Qual é a distância entre as estações e a velocidade média do trem nesse trajeto?",
-    options: ["300 m e 20 m/s", "300 m e 15 m/s", "400 m e 20 m/s", "400 m e 15 m/s", "200 m e 10 m/s"],
+    options: [
+      "300 m e 20 m/s",
+      "300 m e 15 m/s",
+      "400 m e 20 m/s",
+      "400 m e 15 m/s",
+      "200 m e 10 m/s",
+    ],
     answer: 1,
     why: "A distância é a área sob a curva: 0–5 s, ½·5·20 = 50 m; 5–15 s, 10·20 = 200 m; 15–20 s, ½·5·20 = 50 m. Total: 300 m. Velocidade média = 300 m ÷ 20 s = 15 m/s (menor que os 20 m/s do trecho constante).",
   }),
@@ -270,7 +308,19 @@ export const ENEM_QUESTIONS: Question[] = [
         title: "Aquecimento de 100 g de gelo",
         x: { min: 0, max: 12000, step: 2000, label: "Calor recebido (cal)" },
         y: { min: -20, max: 40, step: 20, label: "Temperatura (°C)" },
-        series: [{ name: "Amostra", points: [[0, -10], [500, 0], [8500, 0], [10500, 20]], color: "#c0392b", markers: true }],
+        series: [
+          {
+            name: "Amostra",
+            points: [
+              [0, -10],
+              [500, 0],
+              [8500, 0],
+              [10500, 20],
+            ],
+            color: "#c0392b",
+            markers: true,
+          },
+        ],
       }),
       "Gráfico da temperatura em função do calor recebido: sobe de −10 °C até 0 °C com 500 cal, fica em 0 °C até 8.500 cal e depois sobe até 20 °C com 10.500 cal.",
     ),
@@ -282,7 +332,10 @@ export const ENEM_QUESTIONS: Question[] = [
   e({
     id: "fis-din-3",
     level: "media",
-    figure: toFigure(elevator(), "Desenho de um elevador com uma pessoa em pé sobre uma balança. Uma seta para cima indica que o elevador sobe com aceleração de 2 m/s²."),
+    figure: toFigure(
+      elevator(),
+      "Desenho de um elevador com uma pessoa em pé sobre uma balança. Uma seta para cima indica que o elevador sobe com aceleração de 2 m/s².",
+    ),
     text: "Uma pessoa de 60 kg está em pé sobre uma balança dentro de um elevador que sobe com aceleração constante de 2 m/s². Adotando g = 10 m/s², qual é a intensidade da força que a balança exerce sobre a pessoa?",
     options: ["480 N", "600 N", "720 N", "1.200 N", "120 N"],
     answer: 2,
@@ -291,7 +344,10 @@ export const ENEM_QUESTIONS: Question[] = [
   e({
     id: "fis-ener-4",
     level: "media",
-    figure: toFigure(rollerCoaster(), "Desenho de um trilho. O carrinho parte do repouso no ponto A, a 45 m de altura, desce até o ponto B, ao nível do chão, e sobe até o ponto C, a 25 m de altura."),
+    figure: toFigure(
+      rollerCoaster(),
+      "Desenho de um trilho. O carrinho parte do repouso no ponto A, a 45 m de altura, desce até o ponto B, ao nível do chão, e sobe até o ponto C, a 25 m de altura.",
+    ),
     text: "Um carrinho parte do repouso do ponto A de um trilho sem atrito, como mostra a figura. Adotando g = 10 m/s² e desprezando a resistência do ar, qual é a velocidade do carrinho ao passar pelo ponto C?",
     options: ["10 m/s", "15 m/s", "20 m/s", "25 m/s", "30 m/s"],
     answer: 2,
@@ -305,7 +361,17 @@ export const ENEM_QUESTIONS: Question[] = [
         title: "Onda registrada em um instante",
         x: { min: 0, max: 10, step: 2, label: "Posição (m)" },
         y: { min: -1, max: 1, step: 0.5, label: "Altura (m)" },
-        series: [{ name: "Onda", points: Array.from({ length: 41 }, (_, i) => [i * 0.25, 0.5 * Math.sin((2 * Math.PI * i * 0.25) / 5)] as [number, number]), color: "#2f6fb3" }],
+        series: [
+          {
+            name: "Onda",
+            points: Array.from(
+              { length: 41 },
+              (_, i) =>
+                [i * 0.25, 0.5 * Math.sin((2 * Math.PI * i * 0.25) / 5)] as [number, number],
+            ),
+            color: "#2f6fb3",
+          },
+        ],
       }),
       "Gráfico de uma onda senoidal com dois ciclos completos ao longo de 10 metros e amplitude de 0,5 metro.",
     ),
@@ -317,7 +383,10 @@ export const ENEM_QUESTIONS: Question[] = [
   e({
     id: "fis-elet-5",
     level: "dificil",
-    figure: toFigure(parallelCircuit(), "Esquema de um circuito com uma fonte de 12 volts ligada a dois resistores em paralelo: um de 6 ohms e outro de 3 ohms."),
+    figure: toFigure(
+      parallelCircuit(),
+      "Esquema de um circuito com uma fonte de 12 volts ligada a dois resistores em paralelo: um de 6 ohms e outro de 3 ohms.",
+    ),
     text: "No circuito da figura, uma fonte de 12 V alimenta dois resistores ligados em paralelo, de 6 Ω e de 3 Ω. Qual é a corrente total fornecida pela fonte e a potência total dissipada?",
     options: ["2 A e 24 W", "6 A e 72 W", "1,33 A e 16 W", "12 A e 144 W", "4 A e 48 W"],
     answer: 1,
@@ -502,12 +571,13 @@ export const ENEM_QUESTIONS: Question[] = [
     passages: [
       {
         label: "Texto I",
-        body: "\"O trabalhador brasileiro tem hoje um amigo no poder. A carteira profissional, o salário mínimo e as férias remuneradas não são favores: são a prova de que o Estado cuida de seus filhos. Quem trabalha com ordem constrói a Pátria.\"",
-        source: "Texto elaborado para estudo, inspirado na propaganda oficial das décadas de 1930 e 1940.",
+        body: '"O trabalhador brasileiro tem hoje um amigo no poder. A carteira profissional, o salário mínimo e as férias remuneradas não são favores: são a prova de que o Estado cuida de seus filhos. Quem trabalha com ordem constrói a Pátria."',
+        source:
+          "Texto elaborado para estudo, inspirado na propaganda oficial das décadas de 1930 e 1940.",
       },
       {
         label: "Texto II",
-        body: "\"Tiraram de nós o direito de escolher o nosso sindicato. Para existir, ele precisa do reconhecimento do ministério, e o dirigente que faz greve é chamado de agitador. A carteira assinada veio, é verdade, mas a voz do operário, essa, continua calada.\"",
+        body: '"Tiraram de nós o direito de escolher o nosso sindicato. Para existir, ele precisa do reconhecimento do ministério, e o dirigente que faz greve é chamado de agitador. A carteira assinada veio, é verdade, mas a voz do operário, essa, continua calada."',
         source: "Texto elaborado para estudo, baseado em relatos de trabalhadores do período.",
       },
     ],
@@ -552,12 +622,12 @@ export const ENEM_QUESTIONS: Question[] = [
     passages: [
       {
         label: "Texto I",
-        body: "\"A expansão da fronteira agrícola é indispensável para garantir a oferta de alimentos e as exportações do país. O uso de máquinas, de sementes melhoradas e de grandes extensões de terra eleva a produtividade e gera divisas.\"",
+        body: '"A expansão da fronteira agrícola é indispensável para garantir a oferta de alimentos e as exportações do país. O uso de máquinas, de sementes melhoradas e de grandes extensões de terra eleva a produtividade e gera divisas."',
         source: "Texto elaborado para estudo.",
       },
       {
         label: "Texto II",
-        body: "\"A concentração de terras e a monocultura em larga escala pressionam florestas e nascentes e reduzem a variedade de alimentos produzidos. Os pequenos produtores, que cultivam espécies diversas e abastecem a feira da cidade, são responsáveis por parte significativa do que chega à mesa dos brasileiros.\"",
+        body: '"A concentração de terras e a monocultura em larga escala pressionam florestas e nascentes e reduzem a variedade de alimentos produzidos. Os pequenos produtores, que cultivam espécies diversas e abastecem a feira da cidade, são responsáveis por parte significativa do que chega à mesa dos brasileiros."',
         source: "Texto elaborado para estudo.",
       },
     ],
@@ -624,12 +694,12 @@ export const ENEM_QUESTIONS: Question[] = [
     passages: [
       {
         label: "Texto I",
-        body: "\"Quando não existe um poder comum que mantenha todos em respeito, os homens vivem em guerra de todos contra todos, pois cada um teme o outro e busca a própria segurança. Para escapar desse medo, entregam a um soberano o direito de governá-los.\"",
+        body: '"Quando não existe um poder comum que mantenha todos em respeito, os homens vivem em guerra de todos contra todos, pois cada um teme o outro e busca a própria segurança. Para escapar desse medo, entregam a um soberano o direito de governá-los."',
         source: "Paráfrase livre de ideias de Thomas Hobbes.",
       },
       {
         label: "Texto II",
-        body: "\"O homem nasce livre e, por toda parte, encontra-se acorrentado. Não é a natureza, mas a vida em sociedade e a desigualdade que a acompanha que corrompem os homens. Legítimo é apenas o pacto em que todos se submetem à vontade geral.\"",
+        body: '"O homem nasce livre e, por toda parte, encontra-se acorrentado. Não é a natureza, mas a vida em sociedade e a desigualdade que a acompanha que corrompem os homens. Legítimo é apenas o pacto em que todos se submetem à vontade geral."',
         source: "Paráfrase livre de ideias de Jean-Jacques Rousseau.",
       },
     ],
@@ -695,7 +765,10 @@ export const ENEM_QUESTIONS: Question[] = [
   e({
     id: "lin-gen-4",
     level: "media",
-    figure: toFigure(ambulancePoster(), "Cartaz vermelho com um relógio e o texto: Sua pressa pode esperar. A vida dele, não. Embaixo: Ouviu a sirene? Dê passagem à ambulância."),
+    figure: toFigure(
+      ambulancePoster(),
+      "Cartaz vermelho com um relógio e o texto: Sua pressa pode esperar. A vida dele, não. Embaixo: Ouviu a sirene? Dê passagem à ambulância.",
+    ),
     text: "O cartaz é um texto de campanha de conscientização. Considerando o gênero e a linguagem empregada, é correto afirmar que:",
     options: [
       "predomina a função conativa (apelativa), pois o texto se dirige ao leitor para orientar seu comportamento, e há contraste entre a pressa do motorista e a urgência da vida.",
@@ -705,7 +778,7 @@ export const ENEM_QUESTIONS: Question[] = [
       "o texto é uma notícia, pois relata um fato ocorrido recentemente.",
     ],
     answer: 0,
-    why: "O cartaz usa verbos no imperativo (\"Dê passagem\"), dirige-se diretamente ao leitor e busca mudar sua atitude: função conativa. O contraste entre \"sua pressa pode esperar\" e \"a vida dele, não\" reforça o argumento.",
+    why: 'O cartaz usa verbos no imperativo ("Dê passagem"), dirige-se diretamente ao leitor e busca mudar sua atitude: função conativa. O contraste entre "sua pressa pode esperar" e "a vida dele, não" reforça o argumento.',
   }),
   e({
     id: "lin-fig-4",
@@ -717,7 +790,7 @@ export const ENEM_QUESTIONS: Question[] = [
         source: "Poema elaborado para estudo.",
       },
     ],
-    text: "No poema, a tarde \"dobra a esquina\" e o relógio fica \"rouco\" e \"adormece\". O principal recurso expressivo empregado nesses versos é:",
+    text: 'No poema, a tarde "dobra a esquina" e o relógio fica "rouco" e "adormece". O principal recurso expressivo empregado nesses versos é:',
     options: [
       "a hipérbole, pois há exagero para intensificar um sentimento.",
       "a personificação, pois características humanas são atribuídas à tarde e ao relógio.",
@@ -771,7 +844,7 @@ export const ENEM_QUESTIONS: Question[] = [
         source: "Diálogo elaborado para estudo.",
       },
     ],
-    text: "No diálogo, a fala de seu Zé apresenta marcas de variação linguística (\"Ói\", \"nóis foi\", \"tava\", \"num sei\"). Do ponto de vista da língua, essas marcas devem ser entendidas como:",
+    text: 'No diálogo, a fala de seu Zé apresenta marcas de variação linguística ("Ói", "nóis foi", "tava", "num sei"). Do ponto de vista da língua, essas marcas devem ser entendidas como:',
     options: [
       "erros que mostram falta de inteligência do falante.",
       "uma variedade legítima da língua, ligada à região, à escolaridade e à situação de fala, que pode ser julgada pela adequação ao contexto.",
@@ -780,7 +853,7 @@ export const ENEM_QUESTIONS: Question[] = [
       "uma linguagem formal usada em documentos oficiais.",
     ],
     answer: 1,
-    why: "Variedades linguísticas refletem região, grupo social, idade e situação. A fala de seu Zé é compreendida pelo interlocutor e adequada à conversa informal. Não existe variedade \"melhor\"; existe a mais adequada a cada contexto (por exemplo, a norma-padrão em textos formais).",
+    why: 'Variedades linguísticas refletem região, grupo social, idade e situação. A fala de seu Zé é compreendida pelo interlocutor e adequada à conversa informal. Não existe variedade "melhor"; existe a mais adequada a cada contexto (por exemplo, a norma-padrão em textos formais).',
   }),
   e({
     id: "lin-interp-6",
@@ -788,11 +861,11 @@ export const ENEM_QUESTIONS: Question[] = [
     passages: [
       {
         label: "Crônica",
-        body: "Na agência, a senha 147 aguardava, resignada, o painel chegar ao número 112. Ao lado, um cartaz sorridente garantia: \"Sua satisfação é a nossa prioridade\". Duas horas depois, o gerente, solícito, ofereceu-me um copo d'água e um panfleto sobre \"a importância da paciência\". Saí agradecido: afinal, eu nunca havia aprendido tanto sobre a espera.",
+        body: 'Na agência, a senha 147 aguardava, resignada, o painel chegar ao número 112. Ao lado, um cartaz sorridente garantia: "Sua satisfação é a nossa prioridade". Duas horas depois, o gerente, solícito, ofereceu-me um copo d\'água e um panfleto sobre "a importância da paciência". Saí agradecido: afinal, eu nunca havia aprendido tanto sobre a espera.',
         source: "Texto elaborado para estudo.",
       },
     ],
-    text: "No último período do texto (\"Saí agradecido: afinal, eu nunca havia aprendido tanto sobre a espera\"), o efeito de sentido decorre do uso de:",
+    text: 'No último período do texto ("Saí agradecido: afinal, eu nunca havia aprendido tanto sobre a espera"), o efeito de sentido decorre do uso de:',
     options: [
       "ironia, que revela uma crítica ao mau atendimento ao simular um agradecimento.",
       "elogio sincero, que reconhece a eficiência da agência.",
@@ -801,7 +874,7 @@ export const ENEM_QUESTIONS: Question[] = [
       "eufemismo, que suaviza a notícia de que a agência fechou.",
     ],
     answer: 0,
-    why: "O narrador diz que saiu \"agradecido\" por ter aprendido sobre a espera, mas o contexto (duas horas de fila, cartaz de \"satisfação\", panfleto sobre paciência) mostra o contrário: ele critica o atendimento. Dizer o oposto do que se pensa, com intenção crítica, é ironia.",
+    why: 'O narrador diz que saiu "agradecido" por ter aprendido sobre a espera, mas o contexto (duas horas de fila, cartaz de "satisfação", panfleto sobre paciência) mostra o contrário: ele critica o atendimento. Dizer o oposto do que se pensa, com intenção crítica, é ironia.',
   }),
 
   // ======================= Redação =======================
@@ -811,7 +884,7 @@ export const ENEM_QUESTIONS: Question[] = [
     passages: [
       {
         label: "Trecho de uma conclusão",
-        body: "\"Portanto, o governo precisa tomar providências para acabar com o problema da desigualdade no acesso à internet. Assim, a sociedade será melhor.\"",
+        body: '"Portanto, o governo precisa tomar providências para acabar com o problema da desigualdade no acesso à internet. Assim, a sociedade será melhor."',
         source: "Trecho elaborado para estudo.",
       },
     ],
@@ -824,7 +897,7 @@ export const ENEM_QUESTIONS: Question[] = [
       "Competência 5, pois a proposta é vaga, sem indicar a ação, o meio e o detalhamento da medida.",
     ],
     answer: 4,
-    why: "A Competência 5 avalia a proposta de intervenção. O trecho tem agente (\"o governo\"), mas só diz \"tomar providências\" (ação genérica), sem meio ou modo de execução, sem detalhamento e com finalidade vaga (\"a sociedade será melhor\"). Uma boa proposta explicita agente, ação, meio, finalidade e detalhamento.",
+    why: 'A Competência 5 avalia a proposta de intervenção. O trecho tem agente ("o governo"), mas só diz "tomar providências" (ação genérica), sem meio ou modo de execução, sem detalhamento e com finalidade vaga ("a sociedade será melhor"). Uma boa proposta explicita agente, ação, meio, finalidade e detalhamento.',
   }),
   e({
     id: "red-rep-3",
@@ -837,7 +910,7 @@ export const ENEM_QUESTIONS: Question[] = [
     ],
     text: "Um estudante quer usar um repertório sociocultural na introdução. Qual das opções é a mais adequada, por ser legitimada, pertinente ao tema e produtiva para o argumento?",
     options: [
-      "Citar o provérbio \"o saber não ocupa lugar\" sem relacioná-lo ao problema.",
+      'Citar o provérbio "o saber não ocupa lugar" sem relacioná-lo ao problema.',
       "Citar a pesquisa Retratos da Leitura no Brasil, do Instituto Pró-Livro, para mostrar que parte da população lê pouco e ligar o dado à falta de acesso a bibliotecas.",
       "Citar a letra de uma música de amor, sem relação com a leitura.",
       "Contar que o primo do autor nunca leu um livro.",
@@ -852,19 +925,19 @@ export const ENEM_QUESTIONS: Question[] = [
     passages: [
       {
         label: "Trecho de um desenvolvimento",
-        body: "\"As escolas públicas de diversas regiões carecem de laboratórios. ______, muitos estudantes chegam ao ensino superior sem nenhuma experiência de prática experimental.\"",
+        body: '"As escolas públicas de diversas regiões carecem de laboratórios. ______, muitos estudantes chegam ao ensino superior sem nenhuma experiência de prática experimental."',
         source: "Trecho elaborado para estudo.",
       },
     ],
     text: "Para garantir a coesão (Competência 4), a lacuna deve ser preenchida com o conectivo que estabelece relação de:",
     options: [
-      "oposição, como em \"Entretanto\".",
-      "consequência, como em \"Consequentemente\".",
-      "concessão, como em \"Embora\".",
-      "exemplificação, como em \"Por exemplo\".",
-      "condição, como em \"Caso contrário\".",
+      'oposição, como em "Entretanto".',
+      'consequência, como em "Consequentemente".',
+      'concessão, como em "Embora".',
+      'exemplificação, como em "Por exemplo".',
+      'condição, como em "Caso contrário".',
     ],
     answer: 1,
-    why: "A segunda frase é resultado da primeira: faltam laboratórios, e, por isso, os estudantes não têm prática experimental. A relação é de consequência, expressa por conectivos como \"Consequentemente\", \"Por isso\" e \"Dessa forma\".",
+    why: 'A segunda frase é resultado da primeira: faltam laboratórios, e, por isso, os estudantes não têm prática experimental. A relação é de consequência, expressa por conectivos como "Consequentemente", "Por isso" e "Dessa forma".',
   }),
 ];

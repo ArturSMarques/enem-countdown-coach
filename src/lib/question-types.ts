@@ -1,7 +1,15 @@
 export type Level = "facil" | "media" | "dificil";
 export const LEVELS: Level[] = ["facil", "media", "dificil"];
-export const LEVEL_LABEL: Record<Level, string> = { facil: "Fácil", media: "Média", dificil: "Difícil" };
-export const LEVEL_PLURAL: Record<Level, string> = { facil: "fáceis", media: "médias", dificil: "difíceis" };
+export const LEVEL_LABEL: Record<Level, string> = {
+  facil: "Fácil",
+  media: "Média",
+  dificil: "Difícil",
+};
+export const LEVEL_PLURAL: Record<Level, string> = {
+  facil: "fáceis",
+  media: "médias",
+  dificil: "difíceis",
+};
 
 /** Imagem vetorial (SVG embutido) com texto alternativo para quem não enxerga a figura. */
 export type Figure = { src: string; alt: string; caption?: string };

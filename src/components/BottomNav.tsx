@@ -16,14 +16,19 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
       <ul className="mx-auto grid max-w-2xl grid-cols-5">
         {TABS.map(({ to, label, icon: Icon }) => {
-          const active = to === "/" ? path === "/" : path.startsWith(to) || (to === "/conteudos" && path.startsWith("/aulas"));
+          const active =
+            to === "/"
+              ? path === "/"
+              : path.startsWith(to) || (to === "/conteudos" && path.startsWith("/aulas"));
           return (
             <li key={to}>
               <Link
                 to={to}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors ${active ? "text-primary" : "text-muted-foreground"}`}
               >
-                <span className={`rounded-full px-4 py-1 transition-colors ${active ? "bg-accent" : ""}`}>
+                <span
+                  className={`rounded-full px-4 py-1 transition-colors ${active ? "bg-accent" : ""}`}
+                >
                   <Icon className="h-5 w-5" />
                 </span>
                 {label}

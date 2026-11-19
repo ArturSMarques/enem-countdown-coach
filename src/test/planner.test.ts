@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { buildPlan, redistribute, splitMinutes, type Config } from "@/lib/planner";
 
-const cfg: Config = { examDate: "2026-11-08", hours: 2, shift: "ambos", difficulty: { mat: 3, nat: 3, ling: 3, hum: 3 } };
+const cfg: Config = {
+  examDate: "2026-11-08",
+  hours: 2,
+  shift: "ambos",
+  difficulty: { mat: 3, nat: 3, ling: 3, hum: 3 },
+};
 
 describe("planner", () => {
   it("blocks are 25 to 50 minutes and sum to daily time", () => {
@@ -15,7 +20,9 @@ describe("planner", () => {
   it("final 7 days contain only review, summaries, mock tests and essay", () => {
     const plan = buildPlan({ cfg, status: {}, perf: [], from: "2026-10-20" });
     for (const day of ["2026-11-01", "2026-11-05", "2026-11-07"])
-      plan[day]!.forEach((b) => expect(["Revisão", "Resumo", "Simulado", "Redação"]).toContain(b.activity));
+      plan[day]!.forEach((b) =>
+        expect(["Revisão", "Resumo", "Simulado", "Redação"]).toContain(b.activity),
+      );
     expect(plan["2026-11-08"]).toBeUndefined();
   });
 

@@ -47,7 +47,15 @@ export function pickQuestions(opts: {
   weakSubjects?: ReadonlySet<string>;
   bank?: Question[];
 }): string[] {
-  const { day, count, answered, level = "mix", exclude = new Set(), planTopics = new Set(), weakSubjects = new Set() } = opts;
+  const {
+    day,
+    count,
+    answered,
+    level = "mix",
+    exclude = new Set(),
+    planTopics = new Set(),
+    weakSubjects = new Set(),
+  } = opts;
   const rand = seededRandom(`${day}:${exclude.size}:${level}`);
   const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id));
   const score = (x: Question) =>
@@ -56,7 +64,10 @@ export function pickQuestions(opts: {
     PRI[TOPIC_BY_ID[x.topicId]?.priority ?? "baixa"] +
     rand() * 2;
   const ranked = (list: Question[]) =>
-    list.map((x) => ({ x, s: score(x) })).sort((a, b) => b.s - a.s).map((r) => r.x);
+    list
+      .map((x) => ({ x, s: score(x) }))
+      .sort((a, b) => b.s - a.s)
+      .map((r) => r.x);
   const fresh = pool.filter((x) => !answered.has(x.id));
   const old = pool.filter((x) => answered.has(x.id));
 
@@ -100,8 +111,20 @@ export function optionOrder(question: Question): number[] {
 }
 
 /** Adds one answered question to the day's "questões do dia" line in the performance history. */
-export function withQuizResult(perf: PerfEntry[], subject: string, correct: boolean, day: string, id: string): PerfEntry[] {
+export function withQuizResult(
+  perf: PerfEntry[],
+  subject: string,
+  correct: boolean,
+  day: string,
+  id: string,
+): PerfEntry[] {
   const i = perf.findIndex((p) => p.source === "quiz" && p.date === day && p.subject === subject);
-  if (i < 0) return [...perf, { id, date: day, subject, total: 1, correct: correct ? 1 : 0, source: "quiz" }];
-  return perf.map((p, j) => (j === i ? { ...p, total: p.total + 1, correct: p.correct + (correct ? 1 : 0) } : p));
+  if (i < 0)
+    return [
+      ...perf,
+      { id, date: day, subject, total: 1, correct: correct ? 1 : 0, source: "quiz" },
+    ];
+  return perf.map((p, j) =>
+    j === i ? { ...p, total: p.total + 1, correct: p.correct + (correct ? 1 : 0) } : p,
+  );
 }
