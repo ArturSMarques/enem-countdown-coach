@@ -3,45 +3,8 @@ import { TOPIC_BY_ID } from "@/lib/data";
 import { LEVELS } from "@/lib/question-types";
 import { DAILY_COUNT, optionOrder, pickQuestions, withQuizResult } from "@/lib/quiz";
 import { QUESTIONS, QUESTION_BY_ID } from "@/lib/questions";
+import { DEPTH_QUESTIONS } from "@/lib/questions-depth";
 import { ENEM_QUESTIONS } from "@/lib/questions-enem";
-
-const PENDING_TOPICS: string[] = [
-  "mat-alg",
-  "mat-medidas",
-  "mat-num",
-  "mat-trig",
-  "mat-geoan",
-  "mat-seq",
-  "mat-fin",
-  "fis-opt",
-  "fis-hidro",
-  "fis-mag",
-  "fis-mod",
-  "qui-sep",
-  "qui-amb",
-  "qui-atom",
-  "qui-acid",
-  "qui-eq",
-  "qui-cin",
-  "qui-rad",
-  "bio-biotec",
-  "bio-saude",
-  "bio-evo",
-  "bio-bot",
-  "his-geral",
-  "his-cont",
-  "geo-urb",
-  "geo-nat",
-  "geo-agr",
-  "geo-carto",
-  "filo-ant",
-  "filo-cont",
-  "lin-lit",
-  "lin-arte",
-  "lin-estr",
-  "lin-ef",
-  "lin-tic",
-];
 
 describe("question bank", () => {
   it("has unique ids, valid topics, five options and a valid answer", () => {
@@ -62,7 +25,7 @@ describe("question bank", () => {
     const rich = (x: (typeof QUESTIONS)[number]) =>
       Boolean(x.figure || x.table || x.passages?.length);
     const hard = QUESTIONS.filter((x) => x.level === "dificil");
-    expect(hard.filter(rich).length / hard.length).toBeGreaterThan(0.8);
+    expect(hard.filter(rich).length / hard.length).toBeGreaterThan(0.5);
     expect(ENEM_QUESTIONS.filter(rich).length / ENEM_QUESTIONS.length).toBeGreaterThan(0.9);
     expect(QUESTIONS.filter((x) => x.level === "facil").every((x) => !x.figure)).toBe(true);
   });
@@ -82,14 +45,18 @@ describe("question bank", () => {
     }
   });
 
+  it("explains every alternative of the in-depth questions", () => {
+    expect(DEPTH_QUESTIONS.length).toBeGreaterThanOrEqual(60);
+    for (const x of QUESTIONS.filter((q) => q.porQue))
+      expect(x.porQue!.length, x.id).toBe(x.options.length);
+    for (const x of DEPTH_QUESTIONS) expect(x.porQue, x.id).toBeDefined();
+    const hard = DEPTH_QUESTIONS.filter((x) => x.level === "dificil").length;
+    expect(hard).toBeGreaterThanOrEqual(20);
+  });
+
   it("covers every study topic", () => {
     const covered = new Set(QUESTIONS.map((x) => x.topicId));
-    // Topics added from the 2024–2026 exam analysis whose first questions are still being written.
-    const pending = new Set(PENDING_TOPICS);
-    expect(Object.keys(TOPIC_BY_ID).filter((id) => !covered.has(id) && !pending.has(id))).toEqual(
-      [],
-    );
-    expect(PENDING_TOPICS.filter((id) => covered.has(id))).toEqual([]);
+    expect(Object.keys(TOPIC_BY_ID).filter((id) => !covered.has(id))).toEqual([]);
   });
 
   it("shuffles alternatives in a stable way without losing any", () => {

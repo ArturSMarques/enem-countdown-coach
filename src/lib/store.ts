@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Area } from "./data";
 import { getEdition, resolveExam, targetEdition, yearOf, type DateMode } from "./editions";
+import { stagesByArea } from "./mastery";
 import {
   addDays,
   buildPlan,
@@ -133,6 +134,7 @@ export function extendPlan(s: State, today: string): State {
     until: addDays(today, HORIZON_DAYS - 1),
     counts: doneCounts(s.plan, from),
     reviews: dueReviews(s.plan, from),
+    stages: stagesByArea(s.quiz),
   });
   return { ...s, plan: { ...s.plan, ...fresh } };
 }
@@ -203,6 +205,7 @@ export function regenerate(s: State, cfg = s.config, today = todayISO()): State 
     from,
     counts: doneCounts(s.plan, from),
     reviews: dueReviews(past, from),
+    stages: stagesByArea(s.quiz),
   });
   return { ...s, config: cfg, plan: { ...past, ...fresh } };
 }
@@ -289,6 +292,7 @@ export function ensureDailyQuiz(day: string) {
       answered: new Set(Object.keys(s.quiz)),
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
+      stages: stagesByArea(s.quiz),
     });
     return { ...s, quizDaily: { ...s.quizDaily, [day]: ids } };
   });
@@ -306,6 +310,7 @@ export function moreQuestions(day: string, level: LevelChoice = "mix") {
       exclude: new Set(current),
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
+      stages: stagesByArea(s.quiz),
     });
     if (!ids.length) return s;
     return { ...s, quizDaily: { ...s.quizDaily, [day]: [...current, ...ids] } };

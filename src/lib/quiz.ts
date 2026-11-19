@@ -1,5 +1,5 @@
-import { TOPIC_BY_ID, type Priority } from "./data";
-import type { PerfEntry } from "./planner";
+import { TOPIC_BY_ID, type Area, type Priority } from "./data";
+import type { PerfEntry, Stage } from "./planner";
 import type { Level } from "./question-types";
 import { QUESTIONS, questionSubject, type Question } from "./questions";
 
@@ -45,6 +45,8 @@ export function pickQuestions(opts: {
   exclude?: ReadonlySet<string>;
   planTopics?: ReadonlySet<string>;
   weakSubjects?: ReadonlySet<string>;
+  /** Per-area stage (see mastery.ts): "base" favors easy questions, "avancado" favors hard ones. */
+  stages?: Partial<Record<Area, Stage>>;
   bank?: Question[];
 }): string[] {
   const {
@@ -58,7 +60,14 @@ export function pickQuestions(opts: {
   } = opts;
   const rand = seededRandom(`${day}:${exclude.size}:${level}`);
   const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id));
+  const stageBonus = (x: Question) => {
+    const stage = opts.stages?.[TOPIC_BY_ID[x.topicId]?.area ?? "red"];
+    if (stage === "base") return x.level === "facil" ? 2.5 : x.level === "dificil" ? -1 : 0;
+    if (stage === "avancado") return x.level === "dificil" ? 2.5 : x.level === "facil" ? -1 : 0;
+    return 0;
+  };
   const score = (x: Question) =>
+    stageBonus(x) +
     (planTopics.has(x.topicId) ? 3 : 0) +
     (weakSubjects.has(questionSubject(x)) ? 2 : 0) +
     PRI[TOPIC_BY_ID[x.topicId]?.priority ?? "baixa"] +

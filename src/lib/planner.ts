@@ -132,6 +132,9 @@ let uid = 0;
 const newId = () =>
   `b${Date.now().toString(36)}${(uid++).toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
+/** How the student is doing in an area, from answers by level (see mastery.ts). */
+export type Stage = "base" | "regular" | "avancado";
+
 // ---------- phases of a long preparation ----------
 export type Phase = "base" | "aprofundamento" | "revisao" | "final";
 export const PHASE_LABEL: Record<Phase, string> = {
@@ -185,6 +188,8 @@ export function buildPlan(opts: {
   until?: string;
   /** Reviews owed by blocks planned before `from` (see dueReviews). */
   reviews?: Record<string, string[]>;
+  /** Per-area stage from the student's answers: "base" gets more theory, "avancado" more depth. */
+  stages?: Partial<Record<Area, Stage>>;
 }): Record<string, Block[]> {
   const { cfg, status, perf, from } = opts;
   const counts: Record<string, number> = { ...(opts.counts ?? {}) };
@@ -260,9 +265,15 @@ export function buildPlan(opts: {
       if (review) return block(review, "Revisão", slot);
       const tp = pick(pool);
       const c = counts[tp.id] ?? 0;
+      const stage = opts.stages?.[tp.area] ?? "regular";
       let activity: Activity;
       if (phase === "final") activity = c % 2 ? "Revisão" : "Resumo";
-      else if (phase === "revisao") activity = c % 3 === 0 ? "Resumo" : "Questões";
+      else if (phase === "revisao")
+        activity =
+          stage === "base" ? (c % 2 ? "Resumo" : "Questões") : c % 3 === 0 ? "Resumo" : "Questões";
+      // Struggling with easy questions: more base theory. Doing well on hard ones: more depth.
+      else if (stage === "base") activity = c % 3 === 0 ? "Questões" : "Videoaula";
+      else if (stage === "avancado") activity = c % 2 ? "Aprofundamento" : "Questões";
       else if (phase === "aprofundamento")
         activity = c === 1 ? "Videoaula" : c % 2 ? "Aprofundamento" : "Questões";
       else activity = c % 2 ? "Videoaula" : "Questões";

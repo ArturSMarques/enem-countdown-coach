@@ -27,6 +27,11 @@ export type Question = {
   /** Índice da alternativa correta em `options`. */
   answer: number;
   why: string;
+  /**
+   * Explicação de cada alternativa, na mesma ordem de `options`: por que a certa está certa e
+   * que erro de raciocínio leva a cada uma das erradas.
+   */
+  porQue?: string[];
   /** Material de apoio, mostrado antes do comando: textos, figura e tabela. */
   passages?: Passage[];
   figure?: Figure;

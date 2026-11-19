@@ -1,5 +1,6 @@
 import { TOPIC_BY_ID } from "./data";
 import type { Level, Question } from "./question-types";
+import { DEPTH_QUESTIONS } from "./questions-depth";
 import { ENEM_QUESTIONS } from "./questions-enem";
 
 export type { Question } from "./question-types";
@@ -992,6 +993,7 @@ const SHORT_QUESTIONS: Question[] = [
 export const QUESTIONS: Question[] = [
   ...SHORT_QUESTIONS.map((x) => (MEDIA.has(x.id) ? { ...x, level: "media" as const } : x)),
   ...ENEM_QUESTIONS,
+  ...DEPTH_QUESTIONS,
 ];
 
 export const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((x) => [x.id, x])) as Record<

@@ -3,7 +3,9 @@ import { ExternalLink, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Loading, PageHeader } from "@/components/ui-bits";
 import { AREA_ORDER, AREAS, INEP_PROVAS, SUBJECTS } from "@/lib/data";
+import { levelStats, stageOf, STAGE_HINT, STAGE_LABEL } from "@/lib/mastery";
 import { fmtDay, subjectArea, weakSubjects } from "@/lib/planner";
+import { LEVEL_LABEL, LEVELS } from "@/lib/question-types";
 import { addPerf, recalc, removePerf, useAppState } from "@/lib/store";
 
 export const Route = createFileRoute("/desempenho")({
@@ -39,6 +41,7 @@ function Performance() {
     return { a, total, correct, rate: total ? correct / total : 0 };
   });
   const weak = weakSubjects(state.perf);
+  const byLevel = levelStats(state.quiz);
   const totalQ = state.perf.reduce((s, p) => s + p.total, 0);
 
   return (
@@ -114,6 +117,57 @@ function Performance() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="card-soft mx-5 mt-4 p-4">
+        <h2 className="text-base font-bold">Seu nível por área</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Calculado pelas questões do app, separadas em fáceis, médias e difíceis. Ele ajusta o
+          cronograma e a escolha das questões do dia.
+        </p>
+        {Object.keys(byLevel).length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Responda algumas questões na aba Questões para ver seu nível.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {(Object.keys(AREAS) as (keyof typeof AREAS)[])
+              .filter((a) => byLevel[a])
+              .map((a) => {
+                const st = byLevel[a]!;
+                const stage = stageOf(st);
+                return (
+                  <li key={a}>
+                    <div className="flex items-center justify-between gap-2 text-sm">
+                      <span className={`font-semibold ${AREAS[a].color}`}>{AREAS[a].name}</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold">
+                        {STAGE_LABEL[stage]}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 grid grid-cols-3 gap-1.5 text-center text-xs">
+                      {LEVELS.map((l) => (
+                        <div key={l} className="rounded-lg bg-muted px-1 py-1.5">
+                          <p className="font-semibold text-muted-foreground">{LEVEL_LABEL[l]}</p>
+                          <p className="font-bold">
+                            {st[l].total ? `${st[l].correct}/${st[l].total}` : "—"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{STAGE_HINT[stage]}</p>
+                  </li>
+                );
+              })}
+          </ul>
+        )}
+        {Object.keys(byLevel).length > 0 && (
+          <button
+            onClick={recalc}
+            className="mt-3 flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-bold text-secondary-foreground"
+          >
+            <RefreshCw className="h-3 w-3" /> Atualizar cronograma com meu nível
+          </button>
+        )}
       </section>
 
       <section className="card-soft mx-5 mt-4 p-4">

@@ -158,6 +158,22 @@ export function QuestionCard({
             {hit ? "Você acertou!" : "Não foi dessa vez."}
           </p>
           <p className="mt-1 text-muted-foreground">{question.why}</p>
+          {question.porQue && (
+            <details className="mt-2" open={!hit}>
+              <summary className="cursor-pointer font-semibold">Por que cada alternativa</summary>
+              <ul className="mt-1.5 space-y-1.5">
+                {optionOrder(question).map((original, position) => (
+                  <li
+                    key={original}
+                    className={`rounded-lg px-2 py-1.5 ${original === question.answer ? "bg-success/15" : original === choice ? "bg-destructive/10" : ""}`}
+                  >
+                    <span className="font-bold">{LETTERS[position]}) </span>
+                    <span className="text-muted-foreground">{question.porQue?.[original]}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           {!hit && (
             <Link
               to="/aulas"
