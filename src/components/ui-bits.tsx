@@ -46,6 +46,7 @@ export function Chip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active ?? false}
       className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}
     >
       {children}

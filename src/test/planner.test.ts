@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { goalsFromInputs } from "@/lib/goals";
+import { suggestGoals } from "@/lib/course-weights";
+import { TOPIC_BY_ID, TOPICS } from "@/lib/data";
 import {
   addDays,
+  areaFactors,
   buildPlan,
+  nearestHours,
+  planReason,
+  shiftsForDay,
+  toggleShift,
+  topicScore,
   diffDays,
   HORIZON_DAYS,
   phaseOf,
@@ -15,8 +24,8 @@ const from = "2030-03-04";
 const config = (daysToExam: number): Config => ({
   examDate: addDays(from, daysToExam),
   hours: 2,
-  shift: "ambos",
-  difficulty: { mat: 3, nat: 3, ling: 3, hum: 3 },
+  shifts: ["manha", "noite"],
+  difficulty: { mat: 6, nat: 6, ling: 6, hum: 6 },
 });
 const weekday = (iso: string) => new Date(`${iso}T12:00:00`).getDay();
 
@@ -98,5 +107,146 @@ describe("planner", () => {
     const plan = buildPlan({ cfg, status: {}, perf: [], from });
     expect(Object.keys(plan).sort().at(-1)).toBe(addDays(cfg.examDate, -1));
     expect(diffDays(from, cfg.examDate)).toBe(10);
+  });
+});
+
+describe("personalized plan (version 3)", () => {
+  const base = (hours: number, shifts: Config["shifts"]): Config => ({
+    ...config(120),
+    hours,
+    shifts,
+  });
+  const days = (cfg: Config) => Object.entries(buildPlan({ cfg, status: {}, perf: [], from }));
+
+  it.each([
+    [1, ["manha", "tarde", "noite"]],
+    [2, ["manha", "tarde", "noite"]],
+    [4, ["noite"]],
+    [1.5, ["manha", "noite"]],
+    [3, ["manha", "tarde", "noite"]],
+  ] as const)("%s h with %j: no day without blocks, no block under 25 min", (hours, shifts) => {
+    const plan = days(base(hours, [...shifts]));
+    expect(plan.length).toBeGreaterThan(30);
+    for (const [, blocks] of plan) {
+      expect(blocks.length).toBeGreaterThan(0);
+      for (const b of blocks) expect(b.minutes).toBeGreaterThanOrEqual(25);
+      const total = blocks.reduce((s, b) => s + b.minutes, 0);
+      expect(Math.abs(total - hours * 60)).toBeLessThanOrEqual(5);
+      for (const b of blocks) expect(shifts).toContain(b.shift);
+    }
+  });
+
+  it("with 1 h and three shifts, the day uses two and rotates them over the week", () => {
+    const cfg = base(1, ["manha", "tarde", "noite"]);
+    const used = new Set<string>();
+    for (const [, blocks] of days(cfg).slice(0, 7)) {
+      const shifts = new Set(blocks.map((b) => b.shift));
+      expect(shifts.size).toBe(2);
+      shifts.forEach((s) => used.add(s));
+    }
+    expect(used).toEqual(new Set(["manha", "tarde", "noite"]));
+  });
+
+  it("shiftsForDay keeps every shift when there is time for all and keeps day order", () => {
+    expect(shiftsForDay({ hours: 2, shifts: ["noite", "manha", "tarde"] }, 0)).toEqual([
+      "manha",
+      "tarde",
+      "noite",
+    ]);
+    expect(shiftsForDay({ hours: 0.5, shifts: ["manha", "noite"] }, 3)).toHaveLength(1);
+    expect(shiftsForDay({ hours: 2, shifts: [] }, 0)).toEqual(["manha"]);
+  });
+
+  it("difficulty 1–10 gives exactly the weights of the old 1–5 scale after doubling", () => {
+    const topic = TOPIC_BY_ID["mat-porc"]!;
+    const red = TOPICS.find((t) => t.area === "red")!;
+    const score = (d: number, t = topic) =>
+      topicScore(
+        t,
+        { ...config(100), difficulty: { mat: d, nat: d, ling: d, hum: d } },
+        {},
+        new Set(),
+      );
+    for (const old of [1, 2, 3, 4, 5]) {
+      // Old factor: 0.6 + old * 0.2. New factor at 2 × old must be the same.
+      expect(score(old * 2) / score(2)).toBeCloseTo((0.6 + old * 0.2) / (0.6 + 1 * 0.2), 10);
+      // Essay used max(ling, 3) on the old scale, which is max(ling, 6) now.
+      expect(score(old * 2, red) / score(10, red)).toBeCloseTo(
+        (0.6 + Math.max(old, 3) * 0.2) / (0.6 + 5 * 0.2),
+        10,
+      );
+    }
+  });
+
+  it("goals and course weights shift time between areas, within 0.8× and 1.3×", () => {
+    expect(areaFactors(undefined)).toEqual({ ling: 1, hum: 1, nat: 1, mat: 1, red: 1 });
+    const same = { ling: 700, hum: 700, nat: 700, mat: 700, red: 700 };
+    expect(areaFactors(same)).toEqual({ ling: 1, hum: 1, nat: 1, mat: 1, red: 1 });
+    const f = areaFactors({ ...same, mat: 900, hum: 500 });
+    expect(f.mat).toBeGreaterThan(1);
+    expect(f.hum).toBeLessThan(1);
+    const extreme = areaFactors(
+      { ling: 0, hum: 0, nat: 0, mat: 1000, red: 0 },
+      { mat: 5, ling: 1 },
+    );
+    for (const v of Object.values(extreme)) {
+      expect(v).toBeGreaterThanOrEqual(0.8);
+      expect(v).toBeLessThanOrEqual(1.3);
+    }
+    const cfg = { ...config(200), goals: { ...same, mat: 900, hum: 500 } };
+    const mins = (c: Config, area: string) =>
+      days(c)
+        .flatMap(([, b]) => b)
+        .filter((b) => TOPIC_BY_ID[b.topicId]!.area === area)
+        .reduce((s, b) => s + b.minutes, 0);
+    expect(mins(cfg, "mat")).toBeGreaterThan(mins(config(200), "mat"));
+    expect(mins(cfg, "hum")).toBeLessThan(mins(config(200), "hum"));
+    expect(mins(cfg, "hum")).toBeGreaterThan(0);
+  });
+
+  it("explains in one sentence why the plan looks the way it does", () => {
+    expect(planReason({})).toMatch(/equilibra as áreas/);
+    const same = { ling: 700, hum: 700, nat: 700, mat: 700, red: 700 };
+    expect(planReason({ goals: { ...same, mat: 800 } })).toBe(
+      "Matemática tem prioridade no seu plano: sua meta é 800, acima da sua média.",
+    );
+    expect(
+      planReason(
+        { goals: { ...same, mat: 800 } },
+        { ling: 1, hum: 1, nat: 2, mat: 3, red: 1 },
+        "Medicina (X)",
+      ),
+    ).toBe(
+      "Matemática tem prioridade no seu plano: pesa 3 no curso de Medicina (X) e sua meta é 800, acima da sua média.",
+    );
+  });
+
+  it("onboarding helpers: hours options, shift toggles, goals and suggestions", () => {
+    expect(nearestHours(1.5)).toBe(2);
+    expect(nearestHours(1)).toBe(1);
+    expect(nearestHours(6)).toBe(4);
+    expect(toggleShift(["manha"], "manha")).toEqual(["manha"]); // never empty
+    expect(toggleShift(["noite"], "manha")).toEqual(["manha", "noite"]);
+    expect(toggleShift(["manha"], "todos")).toEqual(["manha", "tarde", "noite"]);
+    const blank = { ling: "", hum: "", nat: "", mat: "", red: "" };
+    expect(goalsFromInputs(blank)).toBeUndefined();
+    expect(goalsFromInputs({ ...blank, mat: "800", nat: "600" })).toEqual({
+      ling: 700,
+      hum: 700,
+      nat: 600,
+      mat: 800,
+      red: 700,
+    });
+    expect(goalsFromInputs({ ...blank, mat: "1500" })?.mat).toBe(1000);
+    expect(suggestGoals(700, undefined)).toEqual({
+      ling: 700,
+      hum: 700,
+      nat: 700,
+      mat: 700,
+      red: 700,
+    });
+    const s = suggestGoals(700, { ling: 1, hum: 1, nat: 2, mat: 3, red: 3 });
+    expect(s.mat).toBeGreaterThan(s.ling);
+    expect(s.mat).toBe(Math.round((700 * (0.8 + (0.2 * 3) / 2)) / 10) * 10);
   });
 });

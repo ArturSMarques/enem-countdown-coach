@@ -2,22 +2,41 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { saveConfig, useAppState } from "@/lib/store";
 import { formatDays, resolveExam, selectableEditions, targetEdition } from "@/lib/editions";
-import { todayISO, type Config } from "@/lib/planner";
-import { AREAS } from "@/lib/data";
+import {
+  DIFFICULTY_MAX,
+  HOURS_OPTIONS,
+  nearestHours,
+  planReason,
+  SHIFT_LABEL,
+  SHIFT_ORDER,
+  todayISO,
+  toggleShift,
+  type Config,
+} from "@/lib/planner";
+import { AREA_ORDER, AREAS } from "@/lib/data";
+import { clampGoal, goalInputsOf, goalsFromInputs, type GoalInputs } from "@/lib/goals";
+import {
+  COURSE_BY_ID,
+  COURSES,
+  courseLabel,
+  GOAL_SUGGESTION,
+  suggestGoals,
+} from "@/lib/course-weights";
 import { Chip } from "@/components/ui-bits";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Configurar plano — Reta Final ENEM" },
+      { title: "Plano personalizado — Reta Final ENEM" },
       {
         name: "description",
-        content: "Em 1 minuto: data da prova, tempo por dia e nível em cada área.",
+        content:
+          "Data da prova, horas e horários de estudo, dificuldade e meta de nota em cada área.",
       },
-      { property: "og:title", content: "Configurar plano — Reta Final ENEM" },
+      { property: "og:title", content: "Plano personalizado — Reta Final ENEM" },
       {
         property: "og:description",
-        content: "Monte seu cronograma de reta final do ENEM em 1 minuto.",
+        content: "Monte um plano de estudos para o ENEM do seu jeito: tempo, horários e metas.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -28,9 +47,9 @@ export const Route = createFileRoute("/onboarding")({
 
 const DEFAULT: Omit<Config, "examDate"> = {
   dateMode: "auto",
-  hours: 1.5,
-  shift: "ambos",
-  difficulty: { mat: 3, nat: 3, ling: 3, hum: 3 },
+  hours: 2,
+  shifts: ["manha", "noite"],
+  difficulty: { mat: 6, nat: 6, ling: 6, hum: 6 },
 };
 
 function Onboarding() {
@@ -41,14 +60,28 @@ function Onboarding() {
     ...DEFAULT,
     examDate: targetEdition(today).days[0],
   }));
-  const mode = cfg.dateMode ?? "auto";
-  const exam = resolveExam(cfg, today);
+  const [goals, setGoals] = useState<GoalInputs>(() => goalInputsOf(undefined));
+  const [average, setAverage] = useState(String(GOAL_SUGGESTION.defaultAverage));
+  const mode = cfg.dateMode === "edicao" ? "edicao" : "auto";
+  const exam = resolveExam({ ...cfg, dateMode: mode }, today);
   useEffect(() => {
-    if (ready && state.config) setCfg(state.config);
+    if (ready && state.config) {
+      setCfg(state.config);
+      setGoals(goalInputsOf(state.config.goals));
+    }
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const course = cfg.course ? COURSE_BY_ID[cfg.course] : undefined;
+  const typedGoals = goalsFromInputs(goals);
+  const reason = planReason({ goals: typedGoals }, course?.weights, course && courseLabel(course));
+  const allShifts = cfg.shifts.length === SHIFT_ORDER.length;
+
   const submit = () => {
-    saveConfig(cfg);
+    const next: Config = { ...cfg, dateMode: mode };
+    if (mode !== "edicao") delete next.edition;
+    if (typedGoals) next.goals = typedGoals;
+    else delete next.goals;
+    saveConfig(next);
     nav({ to: "/" });
   };
 
@@ -56,21 +89,23 @@ function Onboarding() {
     <div className="px-5 pb-10 pt-8">
       <p className="text-sm font-bold uppercase tracking-widest text-primary">Reta Final ENEM</p>
       <h1 className="mt-2 text-3xl font-extrabold leading-tight">
-        Vamos montar seu plano em 1 minuto.
+        Vamos montar seu plano personalizado
       </h1>
       <p className="mt-2 text-muted-foreground">
-        Prioridade para Matemática, Natureza e Redação. Você ajusta depois.
+        Com a data da prova, o seu tempo, a dificuldade de cada área e as suas metas, o app monta um
+        plano dia a dia. Você muda tudo depois em Ajustes.
       </p>
 
       <div className="mt-8 space-y-5">
-        <section className="card-soft p-5">
-          <p className="text-sm font-bold">Data da prova</p>
+        <section className="card-soft p-5" aria-labelledby="q-date">
+          <h2 id="q-date" className="text-sm font-bold">
+            Data da prova
+          </h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {(
               [
                 ["auto", "Automática (recomendado)"],
                 ["edicao", "Escolher edição"],
-                ["manual", "Data manual"],
               ] as const
             ).map(([v, l]) => (
               <Chip
@@ -84,7 +119,6 @@ function Onboarding() {
                       v === "edicao"
                         ? (cfg.edition ?? exam.edition?.year ?? targetEdition(today).year)
                         : undefined,
-                    examDate: v === "manual" ? exam.day1 : cfg.examDate,
                   })
                 }
               >
@@ -105,123 +139,206 @@ function Onboarding() {
               ))}
             </div>
           )}
-          {mode === "manual" ? (
-            <>
-              <label
-                className="mt-4 block text-xs font-semibold text-muted-foreground"
-                htmlFor="exam"
-              >
-                1º dia da prova
-              </label>
-              <input
-                id="exam"
-                type="date"
-                value={cfg.examDate}
-                onChange={(e) => setCfg({ ...cfg, examDate: e.target.value })}
-                className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-base"
-              />
-            </>
-          ) : (
-            exam.edition && (
-              <div className="mt-4 rounded-xl bg-muted p-3 text-sm">
-                <p className="font-bold">
-                  ENEM {exam.edition.year}: {formatDays(exam.edition.days)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {exam.edition.status === "oficial"
-                    ? `Data oficial (${exam.edition.source}).`
-                    : "Data estimada pelo padrão das últimas edições. A confirmar no edital do Inep."}
-                  {mode === "auto" &&
-                    " Quando a prova passar, o app muda sozinho para a edição seguinte."}
-                </p>
-              </div>
-            )
+          {exam.edition && (
+            <div className="mt-4 rounded-xl bg-muted p-3 text-sm">
+              <p className="font-bold">
+                ENEM {exam.edition.year}: {formatDays(exam.edition.days)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {exam.edition.status === "oficial"
+                  ? `Data oficial (${exam.edition.source}).`
+                  : "Data estimada pelo padrão das últimas edições. A confirmar no edital do Inep."}{" "}
+                Quando a prova passar, o app muda sozinho para a edição seguinte.
+              </p>
+            </div>
           )}
         </section>
 
-        <section className="card-soft p-5">
-          <p className="text-sm font-bold">Horas por dia</p>
-          <div className="mt-3 flex gap-2">
-            {([1, 1.5, 2] as const).map((h) => (
-              <Chip key={h} active={cfg.hours === h} onClick={() => setCfg({ ...cfg, hours: h })}>
-                {String(h).replace(".", ",")}h
+        <section className="card-soft p-5" aria-labelledby="q-time">
+          <h2 id="q-time" className="text-sm font-bold">
+            Quanto tempo por dia você consegue estudar?
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {HOURS_OPTIONS.map((h) => (
+              <Chip
+                key={h}
+                active={nearestHours(cfg.hours) === h}
+                onClick={() => setCfg({ ...cfg, hours: h })}
+              >
+                {h === 4 ? "4 h ou mais" : `${h} h`}
               </Chip>
             ))}
           </div>
-          <p className="mt-5 text-sm font-bold">Turno preferido</p>
+          {!(HOURS_OPTIONS as readonly number[]).includes(cfg.hours) && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Seu plano atual usa {String(cfg.hours).replace(".", ",")} h por dia. Escolha uma opção
+              para mudar.
+            </p>
+          )}
+
+          <h2 className="mt-6 text-sm font-bold">Em que horários você estuda?</h2>
+          <p className="text-xs text-muted-foreground">
+            Pode marcar mais de um. Cada horário recebe blocos de pelo menos 25 minutos; se o tempo
+            do dia não der para todos, o plano alterna os horários ao longo da semana.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {(
-              [
-                ["manha", "Manhã (até 12h)"],
-                ["noite", "Noite (após 22h30)"],
-                ["ambos", "Ambos"],
-              ] as const
-            ).map(([v, l]) => (
-              <Chip key={v} active={cfg.shift === v} onClick={() => setCfg({ ...cfg, shift: v })}>
-                {l}
+            {SHIFT_ORDER.map((s) => (
+              <Chip
+                key={s}
+                active={cfg.shifts.includes(s)}
+                onClick={() => setCfg({ ...cfg, shifts: toggleShift(cfg.shifts, s) })}
+              >
+                {SHIFT_LABEL[s]}
               </Chip>
             ))}
+            <Chip
+              active={allShifts}
+              onClick={() => setCfg({ ...cfg, shifts: toggleShift(cfg.shifts, "todos") })}
+            >
+              Todos os horários
+            </Chip>
           </div>
         </section>
 
-        <section className="card-soft p-5">
-          <p className="text-sm font-bold">Quanta dificuldade você sente em cada área?</p>
+        <section className="card-soft p-5" aria-labelledby="q-diff">
+          <h2 id="q-diff" className="text-sm font-bold">
+            Quanta dificuldade você sente em cada área?
+          </h2>
           <p className="text-xs text-muted-foreground">
-            1 = tranquilo · 5 = muito difícil. Áreas difíceis ganham mais tempo.
+            De 1 (tranquilo) a 10 (muito difícil). Áreas mais difíceis ganham mais tempo no plano.
           </p>
           <div className="mt-4 space-y-4">
             {(["mat", "nat", "ling", "hum"] as const).map((a) => (
               <div key={a}>
                 <div className="flex justify-between text-sm">
-                  <span className={`font-semibold ${AREAS[a].color}`}>{AREAS[a].name}</span>
-                  <span className="font-bold">{cfg.difficulty[a]}</span>
+                  <label htmlFor={`diff-${a}`} className={`font-semibold ${AREAS[a].color}`}>
+                    {AREAS[a].name}
+                  </label>
+                  <span className="font-bold tabular-nums">{cfg.difficulty[a]}</span>
                 </div>
-                <div className="mt-2 grid grid-cols-5 gap-1.5">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      aria-label={`${AREAS[a].name} nível ${n}`}
-                      onClick={() => setCfg({ ...cfg, difficulty: { ...cfg.difficulty, [a]: n } })}
-                      className={`h-9 rounded-lg text-sm font-bold transition-colors ${n <= cfg.difficulty[a] ? `${AREAS[a].dot} text-primary-foreground` : "bg-muted text-muted-foreground"}`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
+                <input
+                  id={`diff-${a}`}
+                  type="range"
+                  min={1}
+                  max={DIFFICULTY_MAX}
+                  step={1}
+                  value={cfg.difficulty[a]}
+                  aria-valuetext={`${cfg.difficulty[a]} de ${DIFFICULTY_MAX}`}
+                  onChange={(e) =>
+                    setCfg({
+                      ...cfg,
+                      difficulty: { ...cfg.difficulty, [a]: Number(e.target.value) },
+                    })
+                  }
+                  className="mt-2 h-2 w-full cursor-pointer accent-primary"
+                />
               </div>
             ))}
           </div>
         </section>
 
-        <section className="card-soft p-5">
-          <label className="text-sm font-bold" htmlFor="goal">
-            Meta de nota geral no ENEM (opcional)
-          </label>
-          <p id="goal-help" className="mt-1 text-xs text-muted-foreground">
-            A nota geral que você quer tirar no ENEM, ou seja, a média das cinco provas (Linguagens,
-            Humanas, Natureza, Matemática e Redação). A escala vai de 0 a 1000.
+        <section className="card-soft p-5" aria-labelledby="q-goals">
+          <h2 id="q-goals" className="text-sm font-bold">
+            Meta de nota em cada área (opcional)
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            De 0 a 1000. Áreas com meta mais alta ganham mais tempo. Se deixar alguma em branco, ela
+            recebe a média das outras.
           </p>
-          <input
-            id="goal"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={1000}
-            aria-describedby="goal-help"
-            placeholder="Ex.: 720"
-            value={cfg.goal ?? ""}
-            onChange={(e) =>
-              setCfg({
-                ...cfg,
-                goal: e.target.value
-                  ? Math.min(1000, Math.max(0, Math.round(Number(e.target.value))))
-                  : undefined,
-              })
-            }
-            className="mt-2 w-full rounded-xl border bg-background px-3 py-2.5 text-base"
-          />
+
+          {COURSES.length > 0 && (
+            <div className="mt-4 rounded-xl bg-muted p-3">
+              <label htmlFor="course" className="text-xs font-semibold">
+                Curso que você quer (opcional)
+              </label>
+              <select
+                id="course"
+                value={cfg.course ?? ""}
+                onChange={(e) => {
+                  const next = { ...cfg };
+                  if (e.target.value) next.course = e.target.value;
+                  else delete next.course;
+                  setCfg(next);
+                }}
+                className="mt-1 w-full rounded-lg border bg-background px-2 py-2 text-sm"
+              >
+                <option value="">Sem curso definido</option>
+                {COURSES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {courseLabel(c)}
+                  </option>
+                ))}
+              </select>
+              {course && (
+                <>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Pesos:{" "}
+                    {AREA_ORDER.map((a) => `${AREAS[a].short} ${course.weights[a]}`).join(" · ")} ·{" "}
+                    <a
+                      href={course.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      {course.source} ({course.year})
+                    </a>
+                  </p>
+                  <div className="mt-3 flex items-end gap-2">
+                    <div className="flex-1">
+                      <label htmlFor="average" className="text-xs font-semibold">
+                        Média que você quer
+                      </label>
+                      <input
+                        id="average"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={1000}
+                        value={average}
+                        onChange={(e) => setAverage(e.target.value)}
+                        className="mt-1 w-full rounded-lg border bg-background px-2 py-2 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGoals(goalInputsOf(suggestGoals(clampGoal(average), course.weights)))
+                      }
+                      className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground"
+                    >
+                      Sugerir metas
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {AREA_ORDER.map((a) => (
+              <div key={a}>
+                <label htmlFor={`goal-${a}`} className={`text-xs font-semibold ${AREAS[a].color}`}>
+                  {AREAS[a].name}
+                </label>
+                <input
+                  id={`goal-${a}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={1000}
+                  placeholder="Ex.: 700"
+                  value={goals[a]}
+                  onChange={(e) => setGoals({ ...goals, [a]: e.target.value })}
+                  className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-base"
+                />
+              </div>
+            ))}
+          </div>
         </section>
+
+        <p className="rounded-2xl bg-accent p-4 text-sm text-accent-foreground" aria-live="polite">
+          {reason}
+        </p>
 
         <button
           onClick={submit}

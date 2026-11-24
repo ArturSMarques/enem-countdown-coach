@@ -52,8 +52,8 @@ describe("level mastery", () => {
     const cfg: Config = {
       examDate: addDays(from, 300),
       hours: 2,
-      shift: "ambos",
-      difficulty: { mat: 3, nat: 3, ling: 3, hum: 3 },
+      shifts: ["manha", "noite"],
+      difficulty: { mat: 6, nat: 6, ling: 6, hum: 6 },
     };
     const count = (stages: Partial<Record<Area, Stage>>, activity: string) =>
       Object.values(buildPlan({ cfg, status: {}, perf: [], from, stages }))
