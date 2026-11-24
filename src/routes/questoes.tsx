@@ -85,7 +85,7 @@ function Questions() {
             question={x}
             index={set.indexOf(x)}
             choice={state.quiz[x.id]?.choice}
-            onAnswer={(c) => answerQuestion(x.id, c)}
+            onAnswer={(c, ms) => answerQuestion(x.id, c, ms)}
           />
         ))}
         {shown.length === 0 && (

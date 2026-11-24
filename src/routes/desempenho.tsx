@@ -61,6 +61,10 @@ function Performance() {
         }}
       >
         <h2 className="text-base font-bold">Registrar questões</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Para questões feitas fora do app (livro, simulado). Entram no plano, mas não no nível dos
+          tópicos, que vem só das questões respondidas aqui.
+        </p>
         <div className="mt-3 grid grid-cols-[1fr_5rem_5rem] gap-2">
           <select
             value={f.subject}

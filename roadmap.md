@@ -12,3 +12,8 @@
 - [x] State version 3 with migration and tests (manual date, 1,5 h, "ambos", difficulty 1–5, overall goal).
 - [x] Planner: no shift under 25 min (fewer shifts, rotating), goals adjust area time within 0.8×–1.3×, one-sentence explanation.
 - [ ] Course weights from official sources for the approved course list (docs/pesos-pendentes.md).
+
+# Computed mastery (phase 3)
+- [x] Attempts history (state version 3) filled from the old answers.
+- [x] Mastery levels computed from answers (stricter initial values chosen by the team), with what is missing to go up; manual marks removed from the screen and no longer read by the planner.
+- [ ] No topic has 8 questions yet, so "Dominado" is not reachable: grow the bank (phase 4).

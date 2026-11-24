@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Chip, Loading, PageHeader } from "@/components/ui-bits";
 import { CONTENT } from "@/lib/content";
 import { AREA_ORDER, AREAS, TOPICS, type Area } from "@/lib/data";
-import type { TopicStatus } from "@/lib/planner";
-import { setTopicStatus, useAppState } from "@/lib/store";
+import { MasteryChip, MasteryDetail } from "@/components/MasteryBadge";
+import { todayISO } from "@/lib/planner";
+import { useAppState } from "@/lib/store";
+import { topicMastery } from "@/lib/topic-mastery";
 
 export const Route = createFileRoute("/conteudos")({
   head: () => ({
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/conteudos")({
       { property: "og:title", content: "Conteúdos que mais caem no ENEM" },
       {
         property: "og:description",
-        content: "Marque o que já domina e o app ajusta seu cronograma.",
+        content: "Seu nível em cada tópico vem das questões que você responde no app.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -34,11 +36,6 @@ const PRI_STYLE = {
   baixa: "bg-muted text-muted-foreground",
 };
 const PRI_LABEL = { alta: "Alta", media: "Média", baixa: "Baixa" };
-const STATUS: [TopicStatus, string][] = [
-  ["dominado", "Dominado"],
-  ["revisar", "Revisar"],
-  ["nao", "Não vi"],
-];
 
 function Contents() {
   const { state, ready } = useAppState();
@@ -47,13 +44,19 @@ function Contents() {
   if (!ready) return <Loading />;
   const list = TOPICS.filter((t) => t.area === area);
   const subjects = Array.from(new Set(list.map((t) => t.subject)));
-  const mastered = TOPICS.filter((t) => state.status[t.id] === "dominado").length;
+  const today = todayISO();
+  const mastery = Object.fromEntries(
+    TOPICS.map((t) => [t.id, topicMastery(t.id, state.attempts, today)]),
+  );
+  const strong = TOPICS.filter((t) =>
+    ["avancado", "dominado"].includes(mastery[t.id]!.level),
+  ).length;
 
   return (
     <div>
       <PageHeader
         title="Conteúdos"
-        subtitle={`${mastered} de ${TOPICS.length} tópicos dominados`}
+        subtitle={`${strong} de ${TOPICS.length} tópicos em Avançado ou Dominado`}
         right={
           <Link
             to="/aulas"
@@ -81,7 +84,7 @@ function Contents() {
               {list
                 .filter((t) => t.subject === s)
                 .map((t) => {
-                  const st = state.status[t.id] ?? "nao";
+                  const m = mastery[t.id]!;
                   return (
                     <div key={t.id} className="card-soft p-3.5">
                       <button
@@ -102,9 +105,15 @@ function Contents() {
                           {PRI_LABEL[t.priority]}
                         </span>
                       </button>
+                      <div className="mt-2">
+                        <MasteryChip level={m.level} />
+                      </div>
                       {open === t.id && (
                         <div className="animate-in fade-in mt-2 text-sm">
                           <p className="text-muted-foreground">{t.tip}</p>
+                          <div className="mt-2">
+                            <MasteryDetail mastery={m} />
+                          </div>
                           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
                             <Link
                               to="/conteudos/$topicId"
@@ -124,17 +133,6 @@ function Contents() {
                           </div>
                         </div>
                       )}
-                      <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
-                        {STATUS.map(([v, l]) => (
-                          <button
-                            key={v}
-                            onClick={() => setTopicStatus(t.id, v)}
-                            className={`rounded-lg py-1.5 text-xs font-bold transition-colors ${st === v ? (v === "dominado" ? "bg-success text-primary-foreground" : "bg-card text-foreground shadow-sm") : "text-muted-foreground"}`}
-                          >
-                            {l}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   );
                 })}
@@ -142,7 +140,9 @@ function Contents() {
           </section>
         ))}
         <p className="text-center text-xs text-muted-foreground">
-          Mudou algo? Use “Repriorizar” no Cronograma para atualizar os próximos dias.
+          O nível de cada tópico é calculado pelas questões que você responde no app (as dos últimos
+          30 dias), com mais peso para as médias e difíceis. Questões registradas à mão em
+          Desempenho não contam para o nível.
         </p>
       </div>
     </div>
