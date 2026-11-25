@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVEL_STYLE, QuestionCard } from "@/components/QuestionCard";
 import { Chip, Loading, PageHeader, Progress } from "@/components/ui-bits";
@@ -71,6 +71,14 @@ function Questions() {
       <PageHeader
         title="Questões do dia"
         subtitle={`${done.length} de ${set.length} respondidas hoje`}
+        right={
+          <Link
+            to="/simulado"
+            className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-xs font-bold text-secondary-foreground"
+          >
+            <Timer className="h-3.5 w-3.5" /> Mini-simulado
+          </Link>
+        }
       />
       <div className="px-5">
         <Progress value={set.length ? done.length / set.length : 0} />

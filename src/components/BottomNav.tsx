@@ -19,7 +19,9 @@ export function BottomNav() {
           const active =
             to === "/"
               ? path === "/"
-              : path.startsWith(to) || (to === "/conteudos" && path.startsWith("/aulas"));
+              : path.startsWith(to) ||
+                (to === "/conteudos" && path.startsWith("/aulas")) ||
+                (to === "/questoes" && path.startsWith("/simulado"));
           return (
             <li key={to}>
               <Link

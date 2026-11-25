@@ -43,3 +43,10 @@
 - [x] Lessons data by topic and level, shown in Aulas, on the topic page and in "Pendências a melhorar".
 - [x] Candidates script (YouTube Data API, key only in env) and check:lessons (oEmbed) with docs/aulas.md.
 - [ ] Team creates the API key and runs `bun run aulas:candidatas`; the teacher picks 2–4 lessons per topic, starting with high-incidence topics.
+
+# Study (phase 8)
+- [x] Adaptive spaced review from answers, "Revisão de hoje" on the home page and review on the topic page.
+- [x] Explanation after every answer (also in the mini-simulado correction, including blanks).
+- [x] Mini-simulados by area with timer, exam mode and correction; results feed pentagon, mastery, XP and plan.
+- [ ] Full ENEM mock (2 days × 90 questions) once the bank grows.
+- [ ] AI essay correction (decision 6) after privacy/terms (phase 10) and parental consent (decision 2).

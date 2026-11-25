@@ -315,6 +315,11 @@ export function buildPlan(opts: {
   until?: string;
   /** Reviews owed by blocks planned before `from` (see dueReviews). */
   reviews?: Record<string, string[]>;
+  /**
+   * Topics whose reviews follow the student's answers (review.ts). They get no fixed-gap reviews
+   * here; their review days come in `reviews`.
+   */
+  adaptiveTopics?: ReadonlySet<string>;
   /** Per-area stage from the student's answers: "base" gets more theory, "avancado" more depth. */
   stages?: Partial<Record<Area, Stage>>;
   /** Weight of each area in the chosen course (course-weights.ts), if any. */
@@ -410,7 +415,7 @@ export function buildPlan(opts: {
         activity = c === 1 ? "Videoaula" : c % 2 ? "Aprofundamento" : "Questões";
       else activity = c % 2 ? "Videoaula" : "Questões";
       // The first two times a topic is studied it gets spaced reviews; later it recurs on its own.
-      if (LEARNING.includes(activity) && c <= 2)
+      if (LEARNING.includes(activity) && c <= 2 && !opts.adaptiveTopics?.has(tp.id))
         for (const gap of REVIEW_GAPS) (reviews[addDays(day, gap)] ??= []).push(tp.id);
       return block(tp.id, activity, slot);
     });

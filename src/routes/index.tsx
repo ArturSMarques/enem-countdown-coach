@@ -4,6 +4,7 @@ import { Flame, Moon, Settings2, Sun, Sunrise, Sunset } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { BlockCard } from "@/components/BlockCard";
 import { LeagueCard } from "@/components/LeagueCard";
+import { ReviewToday } from "@/components/ReviewToday";
 import { leagueOf } from "@/lib/league";
 import { Loading, Progress } from "@/components/ui-bits";
 import { checklistFor } from "@/lib/checklist";
@@ -171,6 +172,10 @@ function Today() {
 
       <div className="mt-3">
         <LeagueCard league={leagueOf(state, today)} />
+      </div>
+
+      <div className="mt-3">
+        <ReviewToday attempts={state.attempts} today={today} />
       </div>
 
       {final && (

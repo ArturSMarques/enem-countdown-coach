@@ -21,6 +21,7 @@ export function QuestionCard({
   choice,
   timeMs,
   onAnswer,
+  mode = "practice",
 }: {
   question: Question;
   index: number;
@@ -30,12 +31,20 @@ export function QuestionCard({
   timeMs?: number | undefined;
   /** Receives the chosen alternative and the time spent on the question, in ms. */
   onAnswer: (choice: number, ms: number) => void;
+  /**
+   * "practice": the answer and the explanation show right after choosing (default). "exam": the
+   * choice can be changed and nothing is revealed (mini-simulado running). "result": read-only
+   * correction with the explanation, also for questions left blank.
+   */
+  mode?: "practice" | "exam" | "result";
 }) {
   const shownAt = useRef(Date.now());
   const topic = TOPIC_BY_ID[question.topicId];
   if (!topic) return null;
   const answered = choice !== undefined;
   const hit = choice === question.answer;
+  const revealed = mode === "result" || (mode === "practice" && answered);
+  const locked = mode === "result" || (mode === "practice" && answered);
   return (
     <article className={`card-soft border-l-4 ${AREAS[topic.area].border} p-4`}>
       <div className="flex flex-wrap items-center gap-1.5">
@@ -149,8 +158,10 @@ export function QuestionCard({
             {optionOrder(question).map((original, position) => {
               const picked = choice === original;
               const right = original === question.answer;
-              const tone = !answered
-                ? "bg-card hover:bg-muted"
+              const tone = !revealed
+                ? picked
+                  ? "border-primary bg-primary/10"
+                  : "bg-card hover:bg-muted"
                 : right
                   ? "border-success bg-success/15"
                   : picked
@@ -160,15 +171,16 @@ export function QuestionCard({
                 <li key={original}>
                   <button
                     type="button"
-                    disabled={answered}
+                    disabled={locked}
+                    aria-pressed={mode === "exam" ? picked : undefined}
                     onClick={() => onAnswer(original, Date.now() - shownAt.current)}
                     aria-label={`Alternativa ${LETTERS[position]}`}
                     className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${tone}`}
                   >
                     <span className="mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold">
-                      {answered && right ? (
+                      {revealed && right ? (
                         <Check className="h-3.5 w-3.5 text-success" />
-                      ) : answered && picked ? (
+                      ) : revealed && picked ? (
                         <X className="h-3.5 w-3.5 text-destructive" />
                       ) : (
                         LETTERS[position]
@@ -180,10 +192,14 @@ export function QuestionCard({
               );
             })}
           </ul>
-          {answered && (
+          {revealed && (
             <div role="status" className="animate-in fade-in mt-3 rounded-xl bg-muted p-3 text-sm">
               <p className={`font-bold ${hit ? "text-success" : "text-destructive"}`}>
-                {hit ? "Você acertou!" : "Não foi dessa vez."}
+                {hit
+                  ? "Você acertou!"
+                  : answered
+                    ? "Não foi dessa vez."
+                    : "Em branco: a alternativa certa está marcada."}
               </p>
               {timeMs !== undefined && (
                 <p className="mt-0.5 text-xs text-muted-foreground">

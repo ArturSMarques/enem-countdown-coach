@@ -17,6 +17,7 @@ import { Route as CronogramaRouteImport } from './routes/cronograma'
 import { Route as DesempenhoRouteImport } from './routes/desempenho'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as QuestoesRouteImport } from './routes/questoes'
+import { Route as SimuladoRouteImport } from './routes/simulado'
 import { Route as ConteudosTopicIdRouteImport } from './routes/conteudos_.$topicId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const QuestoesRoute = QuestoesRouteImport.update({
   path: '/questoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SimuladoRoute = SimuladoRouteImport.update({
+  id: '/simulado',
+  path: '/simulado',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConteudosTopicIdRoute = ConteudosTopicIdRouteImport.update({
   id: '/conteudos_/$topicId',
   path: '/conteudos/$topicId',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
   '/questoes': typeof QuestoesRoute
+  '/simulado': typeof SimuladoRoute
   '/conteudos/$topicId': typeof ConteudosTopicIdRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
   '/questoes': typeof QuestoesRoute
+  '/simulado': typeof SimuladoRoute
   '/conteudos/$topicId': typeof ConteudosTopicIdRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
   '/questoes': typeof QuestoesRoute
+  '/simulado': typeof SimuladoRoute
   '/conteudos_/$topicId': typeof ConteudosTopicIdRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/desempenho'
     | '/onboarding'
     | '/questoes'
+    | '/simulado'
     | '/conteudos/$topicId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/desempenho'
     | '/onboarding'
     | '/questoes'
+    | '/simulado'
     | '/conteudos/$topicId'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/desempenho'
     | '/onboarding'
     | '/questoes'
+    | '/simulado'
     | '/conteudos_/$topicId'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   DesempenhoRoute: typeof DesempenhoRoute
   OnboardingRoute: typeof OnboardingRoute
   QuestoesRoute: typeof QuestoesRoute
+  SimuladoRoute: typeof SimuladoRoute
   ConteudosTopicIdRoute: typeof ConteudosTopicIdRoute
 }
 
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuestoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/simulado': {
+      id: '/simulado'
+      path: '/simulado'
+      fullPath: '/simulado'
+      preLoaderRoute: typeof SimuladoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conteudos_/$topicId': {
       id: '/conteudos_/$topicId'
       path: '/conteudos/$topicId'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesempenhoRoute: DesempenhoRoute,
   OnboardingRoute: OnboardingRoute,
   QuestoesRoute: QuestoesRoute,
+  SimuladoRoute: SimuladoRoute,
   ConteudosTopicIdRoute: ConteudosTopicIdRoute,
 }
 export const routeTree = rootRouteImport
