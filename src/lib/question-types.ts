@@ -1,3 +1,5 @@
+import type { ErrorType } from "./error-types";
+
 export type Level = "facil" | "media" | "dificil";
 export const LEVELS: Level[] = ["facil", "media", "dificil"];
 export const LEVEL_LABEL: Record<Level, string> = {
@@ -59,6 +61,11 @@ export type Question = {
   passages?: Passage[];
   figure?: Figure;
   table?: DataTable;
+  /**
+   * Kind of error behind each alternative (null on the right one), for the "Pendências a
+   * melhorar" in Desempenho. Only the in-depth questions have it (see error-types.ts).
+   */
+  erros?: (ErrorType | null)[];
   /** Origin of a real exam question. Authored questions (all of the current bank) have none. */
   source?: QuestionSource;
   /** Use allowed for a real question (see Uso). */

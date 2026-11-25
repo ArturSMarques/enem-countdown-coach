@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ExternalLink, RefreshCw, Trash2 } from "lucide-react";
+import { BookOpen, ExternalLink, PlayCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { AreaPentagon } from "@/components/AreaPentagon";
+import { MasteryChip } from "@/components/MasteryBadge";
 import { Loading, PageHeader } from "@/components/ui-bits";
 import { AREA_ORDER, AREAS, INEP_PROVAS, SUBJECTS } from "@/lib/data";
 import { levelStats, stageOf, STAGE_HINT, STAGE_LABEL } from "@/lib/mastery";
-import { fmtDay, subjectArea, weakSubjects } from "@/lib/planner";
+import { areaScores, pendingSentence, pendingTopics } from "@/lib/performance";
+import { fmtDay, subjectArea, todayISO, weakSubjects } from "@/lib/planner";
 import { LEVEL_LABEL, LEVELS } from "@/lib/question-types";
 import { addPerf, recalc, removePerf, useAppState } from "@/lib/store";
 
@@ -14,12 +17,13 @@ export const Route = createFileRoute("/desempenho")({
       { title: "Questões e simulados — Reta Final ENEM" },
       {
         name: "description",
-        content: "Registre questões e acertos por matéria e descubra seus pontos fracos.",
+        content:
+          "Seu desempenho nas cinco áreas do ENEM e o que melhorar em cada tópico, com dicas e atalhos.",
       },
       { property: "og:title", content: "Desempenho — Reta Final ENEM" },
       {
         property: "og:description",
-        content: "Acertos por área e pontos fracos que ajustam o cronograma.",
+        content: "Pentágono por área e pendências a melhorar, com dicas para estudar.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -43,10 +47,87 @@ function Performance() {
   const weak = weakSubjects(state.perf);
   const byLevel = levelStats(state.quiz);
   const totalQ = state.perf.reduce((s, p) => s + p.total, 0);
+  const today = todayISO();
+  const scores = areaScores(state.attempts, today);
+  const pending = pendingTopics(state.attempts, today);
 
   return (
     <div>
       <PageHeader title="Desempenho" subtitle={`${totalQ} questões registradas`} />
+      <section className="card-soft mx-5 p-4">
+        <h2 className="text-base font-bold">Suas cinco áreas</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Cada ponta cresce com os seus acertos nas questões do app nos últimos 30 dias, com mais
+          peso para as médias e difíceis.
+        </p>
+        <AreaPentagon scores={scores} />
+      </section>
+
+      <section className="card-soft mx-5 mt-4 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-bold">Pendências a melhorar</h2>
+          {(pending.length > 0 || weak.length > 0) && (
+            <button
+              onClick={recalc}
+              className="flex shrink-0 items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-bold text-secondary-foreground"
+            >
+              <RefreshCw className="h-3 w-3" /> Levar ao cronograma
+            </button>
+          )}
+        </div>
+        {pending.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Nenhuma pendência por enquanto. Quando você errar uma questão no app, o tópico aparece
+            aqui com uma dica do que fazer.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {pending.map((p) => (
+              <li key={p.topicId} className="rounded-xl bg-muted p-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className={`font-bold ${AREAS[p.area].color}`}>{p.topicName}</span>
+                  <MasteryChip level={p.level} />
+                </div>
+                <p className="mt-1.5">{pendingSentence(p)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {p.lastError ? p.lastError.advice : p.tip}
+                </p>
+                {p.trap && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">Cuidado:</span> {p.trap.erro}{" "}
+                    {p.trap.comoEvitar}
+                  </p>
+                )}
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
+                  <Link
+                    to="/conteudos/$topicId"
+                    params={{ topicId: p.topicId }}
+                    className="inline-flex items-center gap-1 text-primary"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" /> Estudar o tópico
+                  </Link>
+                  <Link
+                    to="/aulas"
+                    search={{ topic: p.topicId }}
+                    className="inline-flex items-center gap-1 text-primary"
+                  >
+                    <PlayCircle className="h-3.5 w-3.5" /> Ver aulas
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {weak.length > 0 && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Nos seus registros de questões feitas fora do app,{" "}
+            {weak.map((w) => `${w.subject} (${Math.round(w.rate * 100)}%)`).join(", ")}{" "}
+            {weak.length === 1 ? "pede" : "pedem"} mais prática. O cronograma já dá mais tempo a{" "}
+            {weak.length === 1 ? "ela" : "elas"}.
+          </p>
+        )}
+      </section>
+
       <form
         className="card-soft mx-5 p-4"
         onSubmit={(e) => {
@@ -171,38 +252,6 @@ function Performance() {
           >
             <RefreshCw className="h-3 w-3" /> Atualizar cronograma com meu nível
           </button>
-        )}
-      </section>
-
-      <section className="card-soft mx-5 mt-4 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold">Pontos fracos</h2>
-          {weak.length > 0 && (
-            <button
-              onClick={recalc}
-              className="flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-bold text-secondary-foreground"
-            >
-              <RefreshCw className="h-3 w-3" /> Levar ao cronograma
-            </button>
-          )}
-        </div>
-        {weak.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Matérias com menos de 60% de acerto (mín. 5 questões) aparecem aqui e ganham mais tempo
-            no plano.
-          </p>
-        ) : (
-          <ul className="mt-2 space-y-1.5">
-            {weak.map((w) => (
-              <li
-                key={w.subject}
-                className="flex justify-between rounded-xl bg-destructive/8 px-3 py-2 text-sm"
-              >
-                <span className="font-semibold">{w.subject}</span>
-                <span className="font-bold text-destructive">{Math.round(w.rate * 100)}%</span>
-              </li>
-            ))}
-          </ul>
         )}
       </section>
 
