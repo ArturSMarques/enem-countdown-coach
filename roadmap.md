@@ -33,3 +33,8 @@
 - [x] "Pendências a melhorar" with tip, trap and shortcuts, replacing "Pontos fracos".
 - [x] Error type for every wrong alternative of the 60 in-depth questions (teacher may review src/lib/error-types.ts).
 - [ ] Error types for the other questions (they need `porQue` first).
+
+# Leagues and XP (phase 6)
+- [x] XP from answers, blocks and streaks; five leagues ("moderado"); gentle drop after 21 days away.
+- [x] Question difficulty ceiling by league; time per question shown from Intermediário; real released questions first from Avançado.
+- [ ] Shared ranking (needs a server, section 13).

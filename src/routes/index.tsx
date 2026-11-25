@@ -3,6 +3,8 @@ import confetti from "canvas-confetti";
 import { Flame, Moon, Settings2, Sun, Sunrise, Sunset } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { BlockCard } from "@/components/BlockCard";
+import { LeagueCard } from "@/components/LeagueCard";
+import { leagueOf } from "@/lib/league";
 import { Loading, Progress } from "@/components/ui-bits";
 import { checklistFor } from "@/lib/checklist";
 import { COURSE_BY_ID, courseLabel } from "@/lib/course-weights";
@@ -162,10 +164,14 @@ function Today() {
           <Flame className={`h-5 w-5 ${streak ? "text-area-ling" : "text-muted-foreground"}`} />
           <span className="text-lg font-extrabold leading-tight">{streak}</span>
           <span className="text-[10px] font-semibold text-muted-foreground">
-            {streak === 1 ? "dia" : "dias"} seguidos
+            {streak === 1 ? "dia seguido" : "dias seguidos"}
           </span>
         </div>
       </section>
+
+      <div className="mt-3">
+        <LeagueCard league={leagueOf(state, today)} />
+      </div>
 
       {final && (
         <p className="mt-4 rounded-2xl bg-accent p-4 text-sm text-accent-foreground">

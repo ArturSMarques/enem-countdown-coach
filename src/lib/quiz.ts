@@ -1,6 +1,7 @@
 import { TOPIC_BY_ID, type Area, type Priority } from "./data";
 import type { PerfEntry, Stage } from "./planner";
 import type { Level } from "./question-types";
+import { LEAGUES, REAL_FIRST_FROM, type LeagueId } from "./league-config";
 import { canShowContent } from "./question-types";
 import { QUESTIONS, questionSubject, type Question } from "./questions";
 
@@ -37,6 +38,10 @@ export type LevelChoice = Level | "mix";
  * topic. With level "mix" (the daily set) the choice is weighted toward harder questions: 40%
  * difícil, 40% média and 20% fácil, as in the real exam. With a specific level only that level is
  * returned (possibly fewer than `count`). Once the whole bank was answered, "mix" reuses old ones.
+ *
+ * `league` (optional) sets the ceiling of difficulty: Fundamentos only easy, Básico easy and medium
+ * (half and half in the mix), Intermediário and up all three. The stage per area keeps adjusting
+ * within that ceiling. From Avançado on, released real exam questions come first.
  */
 export function pickQuestions(opts: {
   day: string;
@@ -49,6 +54,8 @@ export function pickQuestions(opts: {
   /** Per-area stage (see mastery.ts): "base" favors easy questions, "avancado" favors hard ones. */
   stages?: Partial<Record<Area, Stage>>;
   bank?: Question[];
+  /** Student's league (league.ts): ceiling of difficulty and priority of real questions. */
+  league?: LeagueId;
 }): string[] {
   const {
     day,
@@ -60,8 +67,15 @@ export function pickQuestions(opts: {
     weakSubjects = new Set(),
   } = opts;
   const rand = seededRandom(`${day}:${exclude.size}:${level}`);
+  const leagueIdx = opts.league ? LEAGUES.findIndex((l) => l.id === opts.league) : -1;
+  const allowed = leagueIdx >= 0 ? LEAGUES[leagueIdx]!.levels : null;
+  if (allowed && level !== "mix" && !allowed.includes(level)) return [];
+  const realFirst =
+    leagueIdx >= LEAGUES.findIndex((l) => l.id === REAL_FIRST_FROM) && leagueIdx >= 0;
   // Real questions not released for display can't be answered in the app (reference only).
-  const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id) && canShowContent(x));
+  const pool = (opts.bank ?? QUESTIONS).filter(
+    (x) => !exclude.has(x.id) && canShowContent(x) && (!allowed || allowed.includes(x.level)),
+  );
   const stageBonus = (x: Question) => {
     const stage = opts.stages?.[TOPIC_BY_ID[x.topicId]?.area ?? "red"];
     if (stage === "base") return x.level === "facil" ? 2.5 : x.level === "dificil" ? -1 : 0;
@@ -70,6 +84,7 @@ export function pickQuestions(opts: {
   };
   const score = (x: Question) =>
     stageBonus(x) +
+    (realFirst && x.source && x.uso === "liberada" ? 4 : 0) +
     (planTopics.has(x.topicId) ? 3 : 0) +
     (weakSubjects.has(questionSubject(x)) ? 2 : 0) +
     PRI[TOPIC_BY_ID[x.topicId]?.priority ?? "baixa"] +
@@ -99,8 +114,10 @@ export function pickQuestions(opts: {
     take(ranked(fresh.filter((x) => x.level === level)), count - picked.length, Infinity);
     return picked;
   }
-  const hard = Math.round(count * 0.4);
-  const mid = Math.round(count * 0.4);
+  const hasHard = !allowed || allowed.includes("dificil");
+  const hasMid = !allowed || allowed.includes("media");
+  const hard = hasHard ? Math.round(count * 0.4) : 0;
+  const mid = hasMid ? Math.round(count * (hasHard ? 0.4 : 0.5)) : 0;
   take(ranked(fresh.filter((x) => x.level === "dificil")), hard);
   take(ranked(fresh.filter((x) => x.level === "media")), mid);
   take(ranked(fresh.filter((x) => x.level === "facil")), count - hard - mid);

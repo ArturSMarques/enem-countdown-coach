@@ -2,10 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, ExternalLink, PlayCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { AreaPentagon } from "@/components/AreaPentagon";
+import { LeagueCard } from "@/components/LeagueCard";
 import { MasteryChip } from "@/components/MasteryBadge";
 import { Loading, PageHeader } from "@/components/ui-bits";
 import { AREA_ORDER, AREAS, INEP_PROVAS, SUBJECTS } from "@/lib/data";
 import { levelStats, stageOf, STAGE_HINT, STAGE_LABEL } from "@/lib/mastery";
+import { leagueOf, xpOf } from "@/lib/league";
+import { INACTIVITY_DAYS, XP_RULES } from "@/lib/league-config";
 import { areaScores, pendingSentence, pendingTopics } from "@/lib/performance";
 import { fmtDay, subjectArea, todayISO, weakSubjects } from "@/lib/planner";
 import { LEVEL_LABEL, LEVELS } from "@/lib/question-types";
@@ -50,6 +53,7 @@ function Performance() {
   const today = todayISO();
   const scores = areaScores(state.attempts, today);
   const pending = pendingTopics(state.attempts, today);
+  const xp = xpOf(state);
 
   return (
     <div>
@@ -253,6 +257,32 @@ function Performance() {
             <RefreshCw className="h-3 w-3" /> Atualizar cronograma com meu nível
           </button>
         )}
+      </section>
+
+      <section className="mx-5 mt-4 space-y-2">
+        <LeagueCard league={leagueOf(state, today)} />
+        <div className="card-soft p-4 text-xs text-muted-foreground">
+          <p className="text-sm font-bold text-foreground">Como você ganha XP</p>
+          <p className="mt-1">
+            Até agora: {xp.answers} XP em questões, {xp.blocks} XP em blocos concluídos e{" "}
+            {xp.streak} XP em dias seguidos.
+          </p>
+          <ul className="mt-2 list-disc space-y-0.5 pl-4">
+            <li>
+              Cada questão respondida vale {XP_RULES.answer} XP; acertar soma {XP_RULES.hit.facil}{" "}
+              (fácil), {XP_RULES.hit.media} (média) ou {XP_RULES.hit.dificil} (difícil).
+            </li>
+            <li>Cada bloco do plano concluído vale {XP_RULES.block} XP.</li>
+            <li>
+              Cada dia seguido de estudo soma {XP_RULES.streakStep} XP a mais que o anterior, até{" "}
+              {XP_RULES.streakMax} XP por dia.
+            </li>
+            <li>
+              A liga só desce depois de {INACTIVITY_DAYS} dias sem estudar, e volta quando você
+              retoma. O XP fica neste aparelho.
+            </li>
+          </ul>
+        </div>
       </section>
 
       <a

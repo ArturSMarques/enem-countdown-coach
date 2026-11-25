@@ -5,6 +5,8 @@ import { LEVEL_STYLE, QuestionCard } from "@/components/QuestionCard";
 import { Chip, Loading, PageHeader, Progress } from "@/components/ui-bits";
 import { todayISO } from "@/lib/planner";
 import { LEVELS, LEVEL_LABEL, LEVEL_PLURAL } from "@/lib/question-types";
+import { leagueAtLeast, leagueOf } from "@/lib/league";
+import { LEAGUES, SHOW_TIME_FROM } from "@/lib/league-config";
 import type { LevelChoice } from "@/lib/quiz";
 import { QUESTION_BY_ID, QUESTIONS, type Question } from "@/lib/questions";
 import { answerQuestion, ensureDailyQuiz, moreQuestions, useAppState } from "@/lib/store";
@@ -51,9 +53,17 @@ function Questions() {
   const done = set.filter((x) => state.quiz[x.id]);
   const hits = done.filter((x) => state.quiz[x.id]?.choice === x.answer).length;
   const finished = set.length > 0 && done.length === set.length;
+  const league = leagueOf(state, today);
+  const allowed = LEAGUES.find((l) => l.id === league.id)!.levels;
+  const nextUnlock = LEAGUES.find((l) => l.levels.length > allowed.length);
+  const showTime = leagueAtLeast(league.id, SHOW_TIME_FROM);
+  const timeOf = (id: string) =>
+    showTime ? state.attempts.find((a) => a.questionId === id)?.ms : undefined;
   const shown = set.filter((x) => filter === "mix" || x.level === filter);
   const left = (l: LevelChoice) =>
-    QUESTIONS.filter((x) => (l === "mix" || x.level === l) && !state.quiz[x.id]).length;
+    QUESTIONS.filter(
+      (x) => (l === "mix" ? allowed.includes(x.level) : x.level === l) && !state.quiz[x.id],
+    ).length;
   const label = filter === "mix" ? "" : ` ${LEVEL_PLURAL[filter]}`;
 
   return (
@@ -71,12 +81,21 @@ function Questions() {
       </div>
 
       <div className="mt-4 flex gap-2 overflow-x-auto px-5 pb-1">
-        {FILTERS.map(([value, name]) => (
-          <Chip key={value} active={filter === value} onClick={() => setFilter(value)}>
-            {name}
-          </Chip>
-        ))}
+        {FILTERS.filter(([value]) => value === "mix" || allowed.includes(value)).map(
+          ([value, name]) => (
+            <Chip key={value} active={filter === value} onClick={() => setFilter(value)}>
+              {name}
+            </Chip>
+          ),
+        )}
       </div>
+
+      {nextUnlock && (
+        <p className="mx-5 mt-2 text-xs text-muted-foreground">
+          Na liga {league.name} vêm questões {allowed.map((l) => LEVEL_PLURAL[l]).join(" e ")}. As{" "}
+          {LEVEL_PLURAL[nextUnlock.levels.at(-1)!]} entram na liga {nextUnlock.name}.
+        </p>
+      )}
 
       <div className="mt-4 space-y-3 px-5">
         {shown.map((x) => (
@@ -85,6 +104,7 @@ function Questions() {
             question={x}
             index={set.indexOf(x)}
             choice={state.quiz[x.id]?.choice}
+            timeMs={timeOf(x.id)}
             onAnswer={(c, ms) => answerQuestion(x.id, c, ms)}
           />
         ))}
