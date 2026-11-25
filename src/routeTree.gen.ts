@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AulasRouteImport } from './routes/aulas'
 import { Route as ConteudosRouteImport } from './routes/conteudos'
+import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as CronogramaRouteImport } from './routes/cronograma'
 import { Route as DesempenhoRouteImport } from './routes/desempenho'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -31,6 +32,11 @@ const AulasRoute = AulasRouteImport.update({
 const ConteudosRoute = ConteudosRouteImport.update({
   id: '/conteudos',
   path: '/conteudos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreditosRoute = CreditosRouteImport.update({
+  id: '/creditos',
+  path: '/creditos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CronogramaRoute = CronogramaRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/aulas': typeof AulasRoute
   '/conteudos': typeof ConteudosRoute
+  '/creditos': typeof CreditosRoute
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/aulas': typeof AulasRoute
   '/conteudos': typeof ConteudosRoute
+  '/creditos': typeof CreditosRoute
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/aulas': typeof AulasRoute
   '/conteudos': typeof ConteudosRoute
+  '/creditos': typeof CreditosRoute
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/aulas'
     | '/conteudos'
+    | '/creditos'
     | '/cronograma'
     | '/desempenho'
     | '/onboarding'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/aulas'
     | '/conteudos'
+    | '/creditos'
     | '/cronograma'
     | '/desempenho'
     | '/onboarding'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/aulas'
     | '/conteudos'
+    | '/creditos'
     | '/cronograma'
     | '/desempenho'
     | '/onboarding'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AulasRoute: typeof AulasRoute
   ConteudosRoute: typeof ConteudosRoute
+  CreditosRoute: typeof CreditosRoute
   CronogramaRoute: typeof CronogramaRoute
   DesempenhoRoute: typeof DesempenhoRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/conteudos'
       fullPath: '/conteudos'
       preLoaderRoute: typeof ConteudosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creditos': {
+      id: '/creditos'
+      path: '/creditos'
+      fullPath: '/creditos'
+      preLoaderRoute: typeof CreditosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cronograma': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AulasRoute: AulasRoute,
   ConteudosRoute: ConteudosRoute,
+  CreditosRoute: CreditosRoute,
   CronogramaRoute: CronogramaRoute,
   DesempenhoRoute: DesempenhoRoute,
   OnboardingRoute: OnboardingRoute,

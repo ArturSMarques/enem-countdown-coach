@@ -29,11 +29,14 @@ import {
 } from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
 import { COURSE_BY_ID } from "./course-weights";
+import { attemptsFromQuiz, topicLevels, type Attempt } from "./topic-mastery";
 
 export type CustomLink = { id: string; title: string; url: string; area: Area };
 export type State = {
   config: Config | null;
   plan: Record<string, Block[]>;
+  /** Manual marks from older versions. Kept so nothing is lost, but no longer read (mastery is
+   * computed from `attempts`). */
   status: Record<string, TopicStatus>;
   perf: PerfEntry[];
   links: CustomLink[];
@@ -41,15 +44,17 @@ export type State = {
   studied: string[];
   skipped: string[];
   theme: "light" | "dark" | null;
-  /** Answers given in the questions section, by question id. */
+  /** Answers given in the questions section, by question id (first answer of each question). */
   quiz: Record<string, QuizAnswer>;
+  /** Every answer, oldest first: the history used for computed mastery (version 3). */
+  attempts: Attempt[];
   /** Question ids shown on each day (saved so the day's set does not change after answering). */
   quizDaily: Record<string, string[]>;
   /** ENEM edition the checklist marks belong to; the checklist starts over in a new edition. */
   checklistYear: number | null;
   /** Format of the saved state. 1 (implicit) = before editions; 2 = editions and rolling plan;
    * 3 = personalized plan (shifts list, hours as a number, difficulty 1–10, goals by area, no
-   * manual date). */
+   * manual date) and the attempts history for computed mastery. */
   version: number;
 };
 
@@ -67,6 +72,7 @@ const EMPTY: State = {
   skipped: [],
   theme: null,
   quiz: {},
+  attempts: [],
   quizDaily: {},
   checklistYear: null,
   version: STATE_VERSION,
@@ -99,6 +105,9 @@ export function migrate(raw: unknown, today: string): State {
     s = { ...s, config: { ...s.config, dateMode, ...(edition ? { edition } : {}) } };
   }
   if ((saved.version ?? 1) < 3 && s.config) s = { ...s, config: migrateConfigV3(s.config, today) };
+  // The attempts history is part of version 3. It is filled from `quiz` whenever it is missing,
+  // which also covers states saved by an early build of version 3 without it.
+  if (!Array.isArray(saved.attempts)) s = { ...s, attempts: attemptsFromQuiz(s.quiz ?? {}) };
   // Checklist marks saved before editions existed belong to the edition of the date saved back then.
   if (s.checklistYear == null && s.config?.examDate)
     s = { ...s, checklistYear: yearOf(s.config.examDate) };
@@ -207,7 +216,7 @@ export function extendPlan(s: State, today: string): State {
   if (from > lastExamEve) return s;
   const fresh = buildPlan({
     cfg,
-    status: s.status,
+    status: topicLevels(s.attempts, today),
     perf: s.perf,
     from,
     until: addDays(today, HORIZON_DAYS - 1),
@@ -280,7 +289,7 @@ export function regenerate(s: State, cfg = s.config, today = todayISO()): State 
   const past = Object.fromEntries(Object.entries(s.plan).filter(([d]) => d < from));
   const fresh = buildPlan({
     cfg,
-    status: s.status,
+    status: topicLevels(s.attempts, today),
     perf: s.perf,
     from,
     counts: doneCounts(s.plan, from),
@@ -338,8 +347,6 @@ export function moveBlock(fromDay: string, id: string, toDay: string) {
   });
 }
 
-export const setTopicStatus = (id: string, st: TopicStatus) =>
-  setState((s) => ({ ...s, status: { ...s.status, [id]: st } }));
 export const addPerf = (p: Omit<PerfEntry, "id" | "date">) =>
   setState((s) => ({
     ...s,
@@ -398,12 +405,15 @@ export function moreQuestions(day: string, level: LevelChoice = "mix") {
   });
 }
 
-export function answerQuestion(id: string, choice: number) {
+/** Records an answer. `ms` is the time spent on the question, when the screen measured it. */
+export function answerQuestion(id: string, choice: number, ms?: number) {
   const question = QUESTION_BY_ID[id];
   if (!question || choice < 0 || choice >= question.options.length) return;
   const day = todayISO();
   setState((s) => {
     if (s.quiz[id]) return s;
+    const attempt: Attempt = { questionId: id, choice, correct: choice === question.answer, day };
+    if (ms !== undefined && Number.isFinite(ms) && ms >= 0) attempt.ms = Math.round(ms);
     const perf = withQuizResult(
       s.perf,
       questionSubject(question),
@@ -411,7 +421,12 @@ export function answerQuestion(id: string, choice: number) {
       day,
       crypto.randomUUID(),
     );
-    return { ...s, quiz: { ...s.quiz, [id]: { choice, day } }, perf };
+    return {
+      ...s,
+      quiz: { ...s.quiz, [id]: { choice, day } },
+      attempts: [...(s.attempts ?? []), attempt],
+      perf,
+    };
   });
 }
 
