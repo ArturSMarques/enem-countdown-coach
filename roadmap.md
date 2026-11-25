@@ -17,3 +17,10 @@
 - [x] Attempts history (state version 3) filled from the old answers.
 - [x] Mastery levels computed from answers (stricter initial values chosen by the team), with what is missing to go up; manual marks removed from the screen and no longer read by the planner.
 - [ ] No topic has 8 questions yet, so "Dominado" is not reachable: grow the bank (phase 4).
+
+# Question bank (phase 4)
+- [x] Optional source/uso/revisada fields, integrity tests, "Créditos e fontes" page.
+- [x] Real questions: structure only (origin + official link, statement only when released). None added until the team checks each institution's terms of use.
+- [x] Batch 1 for review: 23 math questions (razão, probabilidade, geometria plana, funções, estatística), bringing those topics to 10 each.
+- [ ] Review batch 1 (students check, teacher approves) — docs/revisao-questoes-novas.md.
+- [ ] Next batches: other high-incidence topics (Linguagens, Humanas, Natureza), then the rest, up to 10 per topic.

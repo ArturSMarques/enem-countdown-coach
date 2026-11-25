@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVEL_STYLE, QuestionCard } from "@/components/QuestionCard";
@@ -129,6 +129,12 @@ function Questions() {
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">
           Questões já respondidas, por nível
+        </p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Questões autorais e revisadas antes de entrar.{" "}
+          <Link to="/creditos" className="font-semibold text-primary hover:underline">
+            Créditos e fontes
+          </Link>
         </p>
       </div>
     </div>

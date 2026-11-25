@@ -1,6 +1,7 @@
 import { TOPICS } from "./data";
 import { MASTERY_CONFIG as C } from "./mastery-config";
 import { addDays, type MasteryLevel } from "./planner";
+import { canShowContent } from "./question-types";
 import { QUESTION_BY_ID, QUESTIONS } from "./questions";
 import type { QuizAnswer } from "./quiz";
 
@@ -28,10 +29,10 @@ export const MASTERY_LABEL: Record<MasteryLevel, string> = {
   dominado: "Dominado",
 };
 
-/** Questions in the bank per topic. */
+/** Questions in the bank per topic that the student can answer in the app. */
 export const BANK_SIZE: Record<string, number> = (() => {
   const out: Record<string, number> = {};
-  for (const q of QUESTIONS) out[q.topicId] = (out[q.topicId] ?? 0) + 1;
+  for (const q of QUESTIONS) if (canShowContent(q)) out[q.topicId] = (out[q.topicId] ?? 0) + 1;
   return out;
 })();
 
