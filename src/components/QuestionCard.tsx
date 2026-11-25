@@ -3,6 +3,7 @@ import { Check, PlayCircle, X } from "lucide-react";
 import { useRef } from "react";
 import { AREAS, TOPIC_BY_ID } from "@/lib/data";
 import { canShowContent, LEVEL_LABEL, sourceLabel, type Level } from "@/lib/question-types";
+import { formatMs } from "@/lib/league";
 import { optionOrder } from "@/lib/quiz";
 import type { Question } from "@/lib/questions";
 import { AreaTag } from "./ui-bits";
@@ -18,12 +19,15 @@ export function QuestionCard({
   question,
   index,
   choice,
+  timeMs,
   onAnswer,
 }: {
   question: Question;
   index: number;
   /** Index of the chosen alternative in `question.options`, or undefined if not answered yet. */
   choice: number | undefined;
+  /** Time spent on the answer, shown after answering (informative, from Intermediário on). */
+  timeMs?: number | undefined;
   /** Receives the chosen alternative and the time spent on the question, in ms. */
   onAnswer: (choice: number, ms: number) => void;
 }) {
@@ -181,6 +185,12 @@ export function QuestionCard({
               <p className={`font-bold ${hit ? "text-success" : "text-destructive"}`}>
                 {hit ? "Você acertou!" : "Não foi dessa vez."}
               </p>
+              {timeMs !== undefined && (
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Tempo nesta questão: {formatMs(timeMs)}. No 2º dia do ENEM são 5 horas para 90
+                  questões, cerca de 3 min 20 s por questão.
+                </p>
+              )}
               <p className="mt-1 text-muted-foreground">{question.why}</p>
               {question.porQue && (
                 <details className="mt-2" open={!hit}>

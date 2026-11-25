@@ -29,6 +29,7 @@ import {
 } from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
 import { COURSE_BY_ID } from "./course-weights";
+import { leagueOf } from "./league";
 import { attemptsFromQuiz, topicLevels, type Attempt } from "./topic-mastery";
 
 export type CustomLink = { id: string; title: string; url: string; area: Area };
@@ -381,6 +382,7 @@ export function ensureDailyQuiz(day: string) {
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
       stages: stagesByArea(s.quiz),
+      league: leagueOf(s, day).id,
     });
     return { ...s, quizDaily: { ...s.quizDaily, [day]: ids } };
   });
@@ -399,6 +401,7 @@ export function moreQuestions(day: string, level: LevelChoice = "mix") {
       planTopics: planTopicsOf(s, day),
       weakSubjects: weakSubjectsOf(s),
       stages: stagesByArea(s.quiz),
+      league: leagueOf(s, day).id,
     });
     if (!ids.length) return s;
     return { ...s, quizDaily: { ...s.quizDaily, [day]: [...current, ...ids] } };
