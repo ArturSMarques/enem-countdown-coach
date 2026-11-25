@@ -24,3 +24,9 @@
 - [x] Batch 1 for review: 23 math questions (razão, probabilidade, geometria plana, funções, estatística), bringing those topics to 10 each.
 - [ ] Review batch 1 (students check, teacher approves) — docs/revisao-questoes-novas.md.
 - [ ] Next batches: other high-incidence topics (Linguagens, Humanas, Natureza), then the rest, up to 10 per topic.
+
+# Performance (phase 5)
+- [x] Pentagon by area (weighted hit rate, 30 days, minimum 5 answers; Redação "sem dados" until essay correction).
+- [x] "Pendências a melhorar" with tip, trap and shortcuts, replacing "Pontos fracos".
+- [x] Error type for every wrong alternative of the 60 in-depth questions (teacher may review src/lib/error-types.ts).
+- [ ] Error types for the other questions (they need `porQue` first).

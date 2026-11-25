@@ -66,7 +66,7 @@ function Questions() {
         <Progress value={set.length ? done.length / set.length : 0} />
         <p className="mt-2 text-xs text-muted-foreground">
           Todo dia vêm questões novas, no estilo ENEM, misturando níveis e escolhidas pelo que está
-          no seu plano e pelos seus pontos fracos. Seus acertos entram no Desempenho.
+          no seu plano e pelas suas pendências. Seus acertos entram no Desempenho.
         </p>
       </div>
 
