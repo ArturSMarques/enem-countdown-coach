@@ -12,8 +12,11 @@ import {
   todayISO,
   weakSubjects,
   type Block,
+  DIFFICULTY_MAX,
   type Config,
+  type Goals,
   type PerfEntry,
+  type Shift,
   type TopicStatus,
 } from "./planner";
 import {
@@ -25,6 +28,7 @@ import {
   type QuizAnswer,
 } from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
+import { COURSE_BY_ID } from "./course-weights";
 
 export type CustomLink = { id: string; title: string; url: string; area: Area };
 export type State = {
@@ -43,13 +47,15 @@ export type State = {
   quizDaily: Record<string, string[]>;
   /** ENEM edition the checklist marks belong to; the checklist starts over in a new edition. */
   checklistYear: number | null;
-  /** Format of the saved state. 1 (implicit) = before editions; 2 = editions and rolling plan. */
+  /** Format of the saved state. 1 (implicit) = before editions; 2 = editions and rolling plan;
+   * 3 = personalized plan (shifts list, hours as a number, difficulty 1–10, goals by area, no
+   * manual date). */
   version: number;
 };
 
 /** The key keeps its old name: the format is versioned inside the saved object (see migrate). */
 const KEY = "reta-final-enem-v1";
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 const EMPTY: State = {
   config: null,
   plan: {},
@@ -92,11 +98,79 @@ export function migrate(raw: unknown, today: string): State {
     }
     s = { ...s, config: { ...s.config, dateMode, ...(edition ? { edition } : {}) } };
   }
+  if ((saved.version ?? 1) < 3 && s.config) s = { ...s, config: migrateConfigV3(s.config, today) };
   // Checklist marks saved before editions existed belong to the edition of the date saved back then.
   if (s.checklistYear == null && s.config?.examDate)
     s = { ...s, checklistYear: yearOf(s.config.examDate) };
   return s;
 }
+
+/** Config as saved by version 2 (or earlier), before the personalized plan. */
+type ConfigV2 = Omit<Config, "shifts"> & {
+  shifts?: Shift[] | undefined;
+  shift?: "manha" | "noite" | "ambos" | undefined;
+  goal?: number | undefined;
+};
+const AREA_KEYS = ["ling", "hum", "nat", "mat", "red"] as const;
+
+/**
+ * Version 3: "manual" date becomes the edition of the saved date's year (when that edition is not
+ * over yet) or "auto"; "shift" becomes a list of shifts; difficulty 1–5 is doubled to the 1–10
+ * scale (the planner formula was adjusted so the plan stays the same); the overall goal is copied
+ * to the five areas as an editable starting point. Hours stay as they were (1,5 h stays valid).
+ */
+export function migrateConfigV3(raw: Config, today: string): Config {
+  const old = raw as ConfigV2;
+  const { shift, goal, ...rest } = old;
+  let { dateMode, edition } = old;
+  if (dateMode === "manual") {
+    const date = old.examDate;
+    const ed = date && date >= today ? getEdition(yearOf(date)) : null;
+    if (ed && ed.days[1] >= today) {
+      dateMode = "edicao";
+      edition = ed.year;
+    } else {
+      dateMode = "auto";
+      edition = undefined;
+    }
+  }
+  const shifts: Shift[] =
+    old.shifts && old.shifts.length
+      ? old.shifts
+      : shift === "ambos"
+        ? ["manha", "noite"]
+        : shift === "manha" || shift === "noite"
+          ? [shift]
+          : ["manha", "noite"];
+  const double = (v: number | undefined) =>
+    Math.min(DIFFICULTY_MAX, Math.max(1, Math.round((Number(v) || 3) * 2)));
+  const d = old.difficulty ?? { mat: 3, nat: 3, ling: 3, hum: 3 };
+  const goals: Goals | undefined =
+    rest.goals ??
+    (typeof goal === "number" && goal > 0
+      ? (Object.fromEntries(AREA_KEYS.map((a) => [a, goal])) as Goals)
+      : undefined);
+  const next: Config = {
+    ...rest,
+    dateMode,
+    hours: typeof old.hours === "number" && old.hours > 0 ? old.hours : 1.5,
+    shifts,
+    difficulty: {
+      mat: double(d.mat),
+      nat: double(d.nat),
+      ling: double(d.ling),
+      hum: double(d.hum),
+    },
+  };
+  if (edition) next.edition = edition;
+  else delete next.edition;
+  if (goals) next.goals = goals;
+  return next;
+}
+
+/** Weight of each area in the course the student chose, if any. */
+export const courseWeights = (cfg: Config | null | undefined) =>
+  cfg?.course ? COURSE_BY_ID[cfg.course]?.weights : undefined;
 
 /**
  * Keeps a loaded state current: follows the target edition when the date is automatic (the plan is
@@ -106,9 +180,14 @@ export function migrate(raw: unknown, today: string): State {
 export function refresh(s: State, today: string): State {
   if (!s.config) return s;
   const exam = resolveExam(s.config, today);
-  let next = s;
-  if (exam.day1 !== s.config.examDate)
-    next = regenerate(s, { ...s.config, examDate: exam.day1 }, today);
+  let cfg = s.config;
+  // A chosen edition that is over: from now on the app follows the next editions by itself.
+  if (cfg.dateMode === "edicao" && exam.edition && exam.edition.year !== cfg.edition) {
+    const { edition: _old, ...rest } = cfg;
+    cfg = { ...rest, dateMode: "auto" };
+  }
+  let next = cfg === s.config ? s : { ...s, config: cfg };
+  if (exam.day1 !== cfg.examDate) next = regenerate(next, { ...cfg, examDate: exam.day1 }, today);
   const year = exam.edition?.year ?? yearOf(exam.day1);
   if (next.checklistYear !== year) next = { ...next, checklist: {}, checklistYear: year };
   return extendPlan(next, today);
@@ -135,6 +214,7 @@ export function extendPlan(s: State, today: string): State {
     counts: doneCounts(s.plan, from),
     reviews: dueReviews(s.plan, from),
     stages: stagesByArea(s.quiz),
+    weights: courseWeights(cfg),
   });
   return { ...s, plan: { ...s.plan, ...fresh } };
 }
@@ -206,6 +286,7 @@ export function regenerate(s: State, cfg = s.config, today = todayISO()): State 
     counts: doneCounts(s.plan, from),
     reviews: dueReviews(past, from),
     stages: stagesByArea(s.quiz),
+    weights: courseWeights(cfg),
   });
   return { ...s, config: cfg, plan: { ...past, ...fresh } };
 }

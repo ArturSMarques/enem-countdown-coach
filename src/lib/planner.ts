@@ -1,7 +1,14 @@
-import { TOPICS, SUBJECTS, type Area, type Topic } from "./data";
+import { AREAS, TOPICS, SUBJECTS, type Area, type Topic } from "./data";
 import { incidenceTotal } from "./incidence";
 
-export type Shift = "manha" | "noite";
+export type Shift = "manha" | "tarde" | "noite";
+/** Order of the shifts in a day (and on screen). */
+export const SHIFT_ORDER: Shift[] = ["manha", "tarde", "noite"];
+export const SHIFT_LABEL: Record<Shift, string> = {
+  manha: "Manhã",
+  tarde: "Tarde",
+  noite: "Noite",
+};
 export type Activity =
   "Videoaula" | "Questões" | "Revisão" | "Redação" | "Resumo" | "Simulado" | "Aprofundamento";
 export type Block = {
@@ -13,17 +20,27 @@ export type Block = {
   done: boolean;
 };
 export type TopicStatus = "dominado" | "revisar" | "nao";
+/** How hard each area feels to the student, 1 (easy) to 10 (very hard). Version 2 used 1–5. */
 export type Difficulty = Record<"ling" | "mat" | "nat" | "hum", number>;
+export const DIFFICULTY_MAX = 10;
+/** Goal score (0–1000) for each of the five ENEM tests. */
+export type Goals = Record<Area, number>;
 export type Config = {
   /** 1º dia da prova. Com dateMode "auto" ou "edicao" é recalculado a partir de src/lib/editions.ts. */
   examDate: string;
-  /** "auto": segue a edição-alvo; "edicao": edição escolhida; "manual": data digitada. */
+  /** "auto": segue a edição-alvo; "edicao": edição escolhida. ("manual" existiu até a versão 2
+   * do estado e é convertido por migrate().) */
   dateMode?: "auto" | "edicao" | "manual" | undefined;
   edition?: number | undefined;
-  hours: 1 | 1.5 | 2;
-  shift: "manha" | "noite" | "ambos";
+  /** Hours a day: 1, 2, 3 or 4 ("4 h ou mais"). 1,5 saved by older versions stays valid. */
+  hours: number;
+  /** Study shifts, at least one. */
+  shifts: Shift[];
   difficulty: Difficulty;
-  goal?: number | undefined;
+  /** Goal for each area (0–1000). Optional: without goals every area keeps its base weight. */
+  goals?: Goals | undefined;
+  /** Course chosen to suggest the goals (id in course-weights.ts). Optional. */
+  course?: string | undefined;
 };
 export type PerfEntry = {
   id: string;
@@ -75,9 +92,69 @@ export function splitMinutes(total: number): number[] {
   return out;
 }
 
+/** Hours a day offered in the onboarding; 4 means "4 h ou mais" (planned with 4 h). */
+export const HOURS_OPTIONS = [1, 2, 3, 4] as const;
+/** Option shown as selected for a saved value (1,5 h from older versions shows as 2 h). */
+export const nearestHours = (h: number) =>
+  HOURS_OPTIONS.reduce((best, o) => (Math.abs(o - h) <= Math.abs(best - h) ? o : best));
+
+/** Toggles one shift (or "todos") keeping at least one selected, in day order. */
+export function toggleShift(current: Shift[], pick: Shift | "todos"): Shift[] {
+  if (pick === "todos") return current.length === SHIFT_ORDER.length ? current : [...SHIFT_ORDER];
+  const next = current.includes(pick) ? current.filter((s) => s !== pick) : [...current, pick];
+  return next.length ? SHIFT_ORDER.filter((s) => next.includes(s)) : current;
+}
+
+/** Shortest study block. A shift that would get less than this is left out of that day. */
+export const MIN_BLOCK = 25;
+
+/**
+ * Shifts used on the i-th day. The day's minutes are split evenly between shifts, and no shift
+ * may get less than MIN_BLOCK minutes (it would end up with no block at all). When the time does
+ * not fit every chosen shift, the day uses fewer, rotating which ones over the days.
+ */
+export function shiftsForDay(cfg: Pick<Config, "hours" | "shifts">, dayIndex: number): Shift[] {
+  const chosen = SHIFT_ORDER.filter((s) => cfg.shifts.includes(s));
+  const all = chosen.length ? chosen : (["manha"] as Shift[]);
+  const total = Math.round(cfg.hours * 60);
+  const fit = Math.max(1, Math.min(all.length, Math.floor(total / MIN_BLOCK)));
+  if (fit === all.length) return all;
+  const start = ((dayIndex % all.length) + all.length) % all.length;
+  const picked = Array.from({ length: fit }, (_, k) => all[(start + k) % all.length]!);
+  return SHIFT_ORDER.filter((s) => picked.includes(s));
+}
+
 // ---------- priority ----------
 const PRI = { alta: 3, media: 2, baixa: 1 };
-const AREA_W: Record<Area, number> = { mat: 1.4, nat: 1.3, red: 1.3, ling: 1, hum: 0.9 };
+export const AREA_W: Record<Area, number> = { mat: 1.4, nat: 1.3, red: 1.3, ling: 1, hum: 0.9 };
+/** Limits of the adjustment from goals and course weights, so no area disappears from the plan. */
+export const AREA_FACTOR_MIN = 0.8;
+export const AREA_FACTOR_MAX = 1.3;
+const AREAS_ALL: Area[] = ["ling", "hum", "nat", "mat", "red"];
+
+/**
+ * Adjustment of each area's base weight (AREA_W), from 0.8 to 1.3. An area whose goal is above
+ * the student's average goal, or that weighs more than average in the chosen course, gets more
+ * time; one below, less. Same goals everywhere and no course: every factor is 1 (plan unchanged).
+ */
+export function areaFactors(
+  goals: Goals | undefined,
+  weights?: Partial<Record<Area, number>> | undefined,
+): Record<Area, number> {
+  const rel = (v: Partial<Record<Area, number>> | undefined) => {
+    const vals = AREAS_ALL.map((a) => v?.[a] ?? 0);
+    const mean = vals.reduce((x, y) => x + y, 0) / vals.length;
+    return (a: Area) => (v && mean > 0 ? (v[a] ?? 0) / mean - 1 : 0);
+  };
+  const g = rel(goals);
+  const w = rel(weights);
+  return Object.fromEntries(
+    AREAS_ALL.map((a) => {
+      const f = 1 + g(a) + 0.5 * w(a);
+      return [a, Math.min(AREA_FACTOR_MAX, Math.max(AREA_FACTOR_MIN, f))];
+    }),
+  ) as Record<Area, number>;
+}
 const ST_W: Record<TopicStatus, number> = { dominado: 0.35, revisar: 1, nao: 1.2 };
 
 export function weakSubjects(perf: PerfEntry[]) {
@@ -104,28 +181,65 @@ export function topicWeight(topic: Topic) {
     : Math.min(4.5, Math.max(0.75, n / 4));
 }
 
+/**
+ * One sentence telling the student why the plan looks the way it does: the area that gained the
+ * most time and why (goal above their average, weight in the chosen course).
+ */
+export function planReason(
+  cfg: Pick<Config, "goals">,
+  weights?: Partial<Record<Area, number>> | undefined,
+  courseName?: string | undefined,
+): string {
+  const factors = areaFactors(cfg.goals, weights);
+  const top = AREAS_ALL.reduce((a, b) => (factors[b] > factors[a] ? b : a));
+  if (factors[top] < 1.03)
+    return "Seu plano equilibra as áreas pelo peso de cada uma no ENEM, pelos tópicos que mais caem e pela dificuldade que você indicou.";
+  const why: string[] = [];
+  const w = weights?.[top];
+  const wMean = AREAS_ALL.reduce((x, a) => x + (weights?.[a] ?? 0), 0) / AREAS_ALL.length;
+  if (w != null && wMean > 0 && w > wMean)
+    why.push(
+      `pesa ${String(w).replace(".", ",")} no ${courseName ? `curso de ${courseName}` : "seu curso"}`,
+    );
+  const goal = cfg.goals?.[top];
+  const gMean = AREAS_ALL.reduce((x, a) => x + (cfg.goals?.[a] ?? 0), 0) / AREAS_ALL.length;
+  if (goal != null && goal > gMean) why.push(`sua meta é ${goal}, acima da sua média`);
+  return `${AREAS[top].name} tem prioridade no seu plano: ${why.join(" e ")}.`;
+}
+
 export function topicScore(
   topic: Topic,
   cfg: Config,
   status: Record<string, TopicStatus>,
   weak: Set<string>,
+  factors: Record<Area, number> = areaFactors(cfg.goals),
 ) {
-  const diff = topic.area === "red" ? Math.max(cfg.difficulty.ling, 3) : cfg.difficulty[topic.area];
+  // Scale 1–10 (version 2 used 1–5 with 0.6 + diff * 0.2; values were doubled on migration, so
+  // 0.6 + diff * 0.1 gives exactly the same weight).
+  const diff = topic.area === "red" ? Math.max(cfg.difficulty.ling, 6) : cfg.difficulty[topic.area];
   const st = status[topic.id] ?? "nao";
   return (
     topicWeight(topic) *
     AREA_W[topic.area] *
-    (0.6 + diff * 0.2) *
+    factors[topic.area] *
+    (0.6 + diff * 0.1) *
     ST_W[st] *
     (weak.has(topic.subject) ? 1.4 : 1)
   );
 }
 
-export function rankedTopics(cfg: Config, status: Record<string, TopicStatus>, perf: PerfEntry[]) {
+export function rankedTopics(
+  cfg: Config,
+  status: Record<string, TopicStatus>,
+  perf: PerfEntry[],
+  weights?: Partial<Record<Area, number>> | undefined,
+) {
   const weak = new Set(weakSubjects(perf).map((w) => w.subject));
-  return TOPICS.map((tp) => ({ topic: tp, score: topicScore(tp, cfg, status, weak) })).sort(
-    (a, b) => b.score - a.score,
-  );
+  const factors = areaFactors(cfg.goals, weights);
+  return TOPICS.map((tp) => ({
+    topic: tp,
+    score: topicScore(tp, cfg, status, weak, factors),
+  })).sort((a, b) => b.score - a.score);
 }
 
 let uid = 0;
@@ -190,17 +304,21 @@ export function buildPlan(opts: {
   reviews?: Record<string, string[]>;
   /** Per-area stage from the student's answers: "base" gets more theory, "avancado" more depth. */
   stages?: Partial<Record<Area, Stage>>;
+  /** Weight of each area in the chosen course (course-weights.ts), if any. */
+  weights?: Partial<Record<Area, number>> | undefined;
 }): Record<string, Block[]> {
   const { cfg, status, perf, from } = opts;
   const counts: Record<string, number> = { ...(opts.counts ?? {}) };
-  const ranked = rankedTopics(cfg, status, perf);
+  const ranked = rankedTopics(cfg, status, perf, opts.weights);
   const pool = ranked.filter((r) => r.topic.area !== "red");
   const redPool = ranked.filter((r) => r.topic.area === "red");
   const plan: Record<string, Block[]> = {};
   const lastDay = addDays(cfg.examDate, -1);
   const until = [opts.until ?? addDays(from, HORIZON_DAYS - 1), lastDay].sort()[0]!;
   const nDays = diffDays(from, until) + 1;
-  const shifts: Shift[] = cfg.shift === "ambos" ? ["manha", "noite"] : [cfg.shift];
+  // Day index counted from the exam eve, so the shift rotation of a date does not depend on the
+  // day the plan was (re)built.
+  const dayIndex = (day: string) => diffDays(day, lastDay);
   const reviews: Record<string, string[]> = {};
   for (const [d, ids] of Object.entries(opts.reviews ?? {})) reviews[d] = [...ids];
   let lastArea: Area | null = null;
@@ -238,6 +356,7 @@ export function buildPlan(opts: {
     const phase = phaseOf(day, cfg.examDate);
     const wd = weekday(day);
     const slots: { shift: Shift; minutes: number }[] = [];
+    const shifts = shiftsForDay(cfg, dayIndex(day));
     for (const s of shifts)
       for (const m of splitMinutes((cfg.hours * 60) / shifts.length))
         slots.push({ shift: s, minutes: m });

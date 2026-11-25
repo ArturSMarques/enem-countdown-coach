@@ -5,10 +5,30 @@ import { useEffect, useRef } from "react";
 import { BlockCard } from "@/components/BlockCard";
 import { Loading, Progress } from "@/components/ui-bits";
 import { checklistFor } from "@/lib/checklist";
-import { MOTIVATION } from "@/lib/data";
+import { COURSE_BY_ID, courseLabel } from "@/lib/course-weights";
+import { AREA_ORDER, AREAS, MOTIVATION } from "@/lib/data";
 import { formatDays, resolveExam, type Edition } from "@/lib/editions";
-import { diffDays, fmtDay, isFinalWeek, PHASE_LABEL, phaseOf, todayISO } from "@/lib/planner";
-import { setTheme, skipToday, streakOf, toggleBlock, toggleCheck, useAppState } from "@/lib/store";
+import {
+  diffDays,
+  fmtDay,
+  isFinalWeek,
+  PHASE_LABEL,
+  phaseOf,
+  planReason,
+  SHIFT_LABEL,
+  SHIFT_ORDER,
+  todayISO,
+  type Shift,
+} from "@/lib/planner";
+import {
+  courseWeights,
+  setTheme,
+  skipToday,
+  streakOf,
+  toggleBlock,
+  toggleCheck,
+  useAppState,
+} from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,7 +81,7 @@ function Today() {
     typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   const msg = MOTIVATION[new Date().getDate() % MOTIVATION.length];
   const skipped = state.skipped.includes(today);
-  const shifts = (["manha", "noite"] as const).filter((s) => blocks.some((b) => b.shift === s));
+  const shifts = SHIFT_ORDER.filter((s) => blocks.some((b) => b.shift === s));
 
   return (
     <div className="px-5 pt-6">
@@ -110,9 +130,18 @@ function Today() {
             Fase do plano: {PHASE_LABEL[phaseOf(today, cfg.examDate)]}
           </p>
         )}
-        {cfg.goal && (
+        {cfg.goals && (
           <p className="mt-1 text-xs font-semibold opacity-75">
-            Meta no ENEM: {cfg.goal} pontos (nota geral)
+            Suas metas: {AREA_ORDER.map((a) => `${AREAS[a].name} ${cfg.goals![a]}`).join(" · ")}
+          </p>
+        )}
+        {daysLeft > 0 && (
+          <p className="mt-1 text-xs opacity-75">
+            {planReason(
+              cfg,
+              courseWeights(cfg),
+              cfg.course && COURSE_BY_ID[cfg.course] && courseLabel(COURSE_BY_ID[cfg.course]!),
+            )}
           </p>
         )}
       </section>
@@ -162,12 +191,8 @@ function Today() {
       {shifts.map((s) => (
         <section key={s} className="mt-6">
           <h2 className="mb-2.5 flex items-center gap-2 text-base font-bold">
-            {s === "manha" ? (
-              <Sunrise className="h-4 w-4 text-area-hum" />
-            ) : (
-              <Sunset className="h-4 w-4 text-area-mat" />
-            )}
-            {s === "manha" ? "Manhã · antes das 12h" : "Noite · depois das 22h30"}
+            <ShiftIcon shift={s} />
+            {SHIFT_LABEL[s]}
           </h2>
           <div className="space-y-2.5">
             {blocks
@@ -251,4 +276,10 @@ function ExamChecklist({
       ))}
     </section>
   );
+}
+
+function ShiftIcon({ shift }: { shift: Shift }) {
+  if (shift === "manha") return <Sunrise className="h-4 w-4 text-area-hum" />;
+  if (shift === "tarde") return <Sun className="h-4 w-4 text-area-nat" />;
+  return <Sunset className="h-4 w-4 text-area-mat" />;
 }

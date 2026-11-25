@@ -132,7 +132,9 @@ export function resolveExam(
   const mode = cfg.dateMode ?? "auto";
   if (mode === "manual")
     return { day1: cfg.examDate, day2: addDays(cfg.examDate, 7), edition: null };
-  const edition = mode === "edicao" && cfg.edition ? getEdition(cfg.edition) : targetEdition(today);
+  const chosen = mode === "edicao" && cfg.edition ? getEdition(cfg.edition) : null;
+  // A chosen edition that is already over gives way to the next one, like "auto".
+  const edition = chosen && chosen.days[1] >= today ? chosen : targetEdition(today);
   return { day1: edition.days[0], day2: edition.days[1], edition };
 }
 
