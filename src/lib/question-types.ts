@@ -17,6 +17,29 @@ export type Figure = { src: string; alt: string; caption?: string };
 export type Passage = { label?: string; body: string; source?: string };
 export type DataTable = { caption?: string; head: string[]; rows: string[][]; note?: string };
 
+/** Exam boards whose real questions may enter the bank (with source and license checked). */
+export type Banca = "Enem" | "ITA" | "Fuvest";
+
+/** Where a real exam question comes from. Required for every real question. */
+export type QuestionSource = {
+  banca: Banca;
+  ano: number;
+  /** Dia (Enem: "1º dia") ou fase (ITA, Fuvest: "1ª fase"). */
+  etapa: string;
+  /** Número original da questão na prova. */
+  numero: number;
+  /** Link oficial da prova (site da banca). */
+  url: string;
+};
+
+/**
+ * Use allowed for a question. Authored questions (no `source`) are always shown. A real question is
+ * shown in full only when "liberada" (the team checked the institution's terms of use, including
+ * third-party texts and images); "em-verificacao" and "somente-link" show only the reference and
+ * the official link.
+ */
+export type Uso = "liberada" | "em-verificacao" | "somente-link";
+
 export type Question = {
   id: string;
   topicId: string;
@@ -36,4 +59,21 @@ export type Question = {
   passages?: Passage[];
   figure?: Figure;
   table?: DataTable;
+  /** Origin of a real exam question. Authored questions (all of the current bank) have none. */
+  source?: QuestionSource;
+  /** Use allowed for a real question (see Uso). */
+  uso?: Uso;
+  /**
+   * Questions written for the bank start as `false` in questions-novas.ts and only enter QUESTIONS
+   * after review (students check, the teacher approves). Absent = reviewed (the original bank).
+   */
+  revisada?: boolean;
 };
+
+/** Credit line of a real question, e.g. "Enem 2023, 1º dia, questão 45". */
+export const sourceLabel = (s: QuestionSource) =>
+  `${s.banca} ${s.ano}, ${s.etapa}, questão ${s.numero}`;
+
+/** Whether the app may show the full statement of a question. */
+export const canShowContent = (q: Pick<Question, "source" | "uso">) =>
+  !q.source || q.uso === "liberada";

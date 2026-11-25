@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ExternalLink, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Loading, PageHeader } from "@/components/ui-bits";
@@ -220,6 +220,12 @@ function Performance() {
         </span>
         <ExternalLink className="h-5 w-5 text-primary" />
       </a>
+      <p className="mx-5 mt-2 text-center text-xs text-muted-foreground">
+        <Link to="/creditos" className="font-semibold text-primary hover:underline">
+          Créditos e fontes
+        </Link>{" "}
+        das questões e conteúdos
+      </p>
 
       {state.perf.length > 0 && (
         <section className="mx-5 mt-6">
