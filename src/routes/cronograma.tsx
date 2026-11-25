@@ -12,6 +12,7 @@ import {
   PHASE_LABEL,
   phaseOf,
   todayISO,
+  SHIFT_LABEL,
 } from "@/lib/planner";
 import { moveBlock, recalc, toggleBlock, useAppState } from "@/lib/store";
 
@@ -114,8 +115,14 @@ function Schedule() {
         <div className="mt-4 space-y-4 px-5">
           {days.map((d) => {
             const blocks = state.plan[d] ?? [];
+            const minutes = blocks.reduce((m, b) => m + b.minutes, 0);
+            const doneCount = blocks.filter((b) => b.done).length;
+            const isToday = d === today;
             return (
               <section
+                aria-label={
+                  isToday ? "Hoje" : fmtDay(d, { weekday: "long", day: "numeric", month: "long" })
+                }
                 key={d}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -129,15 +136,22 @@ function Schedule() {
                     setMoving(null);
                   }
                 }}
-                className={`rounded-3xl p-3 transition-colors ${overDay === d || moving ? "bg-accent" : "bg-muted/60"}`}
+                className={`rounded-3xl p-3 transition-colors ${overDay === d || moving ? "bg-accent" : "bg-muted/60"} ${isToday ? "ring-2 ring-primary" : ""}`}
               >
-                <h2 className="mb-2 flex items-center justify-between px-1 text-sm font-bold capitalize">
-                  {d === today
-                    ? "Hoje"
-                    : fmtDay(d, { weekday: "long", day: "2-digit", month: "2-digit" })}
-                  {isFinalWeek(d, state.config!.examDate) && (
-                    <span className="text-[11px] font-bold text-primary">Semana final</span>
-                  )}
+                <h2 className="mb-2 flex flex-wrap items-baseline justify-between gap-x-2 px-1 text-sm font-bold capitalize">
+                  <span>
+                    {isToday ? "Hoje" : fmtDay(d, { weekday: "long" })}
+                    <span className="ml-1.5 text-xs font-semibold text-muted-foreground">
+                      {fmtDay(d, { day: "2-digit", month: "2-digit" })}
+                    </span>
+                  </span>
+                  <span className="text-[11px] font-semibold normal-case text-muted-foreground">
+                    {blocks.length > 0 &&
+                      `${fmtMinutes(minutes)} · ${doneCount}/${blocks.length} feitos`}
+                    {isFinalWeek(d, state.config!.examDate) && (
+                      <span className="ml-1.5 font-bold text-primary">Semana final</span>
+                    )}
+                  </span>
                 </h2>
                 <div className="space-y-2">
                   {blocks.length === 0 && (
@@ -145,13 +159,18 @@ function Schedule() {
                       Dia livre. Arraste blocos para cá.
                     </p>
                   )}
-                  {blocks.map((b) => (
+                  {blocks.map((b, i) => (
                     <div
                       key={b.id}
                       draggable
                       onDragStart={(e) => e.dataTransfer.setData("text/plain", `${d}|${b.id}`)}
                       className="cursor-grab active:cursor-grabbing"
                     >
+                      {(i === 0 || blocks[i - 1]!.shift !== b.shift) && (
+                        <p className="mb-1 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                          {SHIFT_LABEL[b.shift]}
+                        </p>
+                      )}
                       <BlockCard block={b} compact onToggle={() => toggleBlock(d, b.id)} />
                       {!moving && (
                         <button
@@ -176,17 +195,20 @@ function Schedule() {
           {days.map((d) => {
             const blocks = state.plan[d] ?? [];
             const fw = isFinalWeek(d, state.config!.examDate);
+            const minutes = blocks.reduce((m, b) => m + b.minutes, 0);
             return (
               <button
                 key={d}
                 onClick={() => setOpenDay(openDay === d ? null : d)}
-                className={`card-soft p-2 text-left ${openDay === d ? "ring-2 ring-primary" : ""} ${fw ? "bg-accent" : ""}`}
+                aria-pressed={openDay === d}
+                aria-label={`${d === today ? "Hoje, " : ""}${fmtDay(d, { weekday: "long", day: "numeric", month: "long" })}: ${blocks.length} blocos, ${fmtMinutes(minutes)}`}
+                className={`card-soft p-2 text-left ${openDay === d ? "ring-2 ring-primary" : d === today ? "ring-2 ring-primary/50" : ""} ${fw ? "bg-accent" : ""}`}
               >
                 <p className="text-[11px] font-bold capitalize text-muted-foreground">
                   {fmtDay(d, { weekday: "short" })}
                 </p>
                 <p className="text-sm font-extrabold">
-                  {fmtDay(d, { day: "2-digit", month: "2-digit" })}
+                  {d === today ? "Hoje" : fmtDay(d, { day: "2-digit", month: "2-digit" })}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {blocks.map((b) => {
@@ -206,6 +228,9 @@ function Schedule() {
             <div className="col-span-full space-y-2 py-2">
               <p className="text-sm font-bold capitalize">
                 {fmtDay(openDay, { weekday: "long", day: "numeric", month: "long" })}
+                <span className="ml-1.5 text-xs font-semibold normal-case text-muted-foreground">
+                  {fmtMinutes((state.plan[openDay] ?? []).reduce((m, b) => m + b.minutes, 0))}
+                </span>
               </p>
               {(state.plan[openDay] ?? []).map((b) => (
                 <BlockCard key={b.id} block={b} compact />
@@ -216,4 +241,12 @@ function Schedule() {
       )}
     </div>
   );
+}
+
+/** "45 min", "2 h", "2 h 30 min". */
+function fmtMinutes(min: number) {
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${h} h ${m} min` : `${h} h`;
 }
