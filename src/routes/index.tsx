@@ -68,10 +68,11 @@ function Today() {
 
   useEffect(() => {
     if (!ready) return;
-    if (prevAll.current === false && allDone)
+    const calm = state.dataSaver || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prevAll.current === false && allDone && !calm)
       confetti({ particleCount: 120, spread: 75, origin: { y: 0.7 } });
     prevAll.current = allDone;
-  }, [allDone, ready]);
+  }, [allDone, ready, state.dataSaver]);
 
   if (!ready || !state.config) return <Loading />;
   const cfg = state.config;
@@ -85,6 +86,8 @@ function Today() {
   const msg = MOTIVATION[new Date().getDate() % MOTIVATION.length];
   const skipped = state.skipped.includes(today);
   const shifts = SHIFT_ORDER.filter((s) => blocks.some((b) => b.shift === s));
+  const total = blocks.reduce((m, b) => m + b.minutes, 0);
+  const left = blocks.filter((b) => !b.done).reduce((m, b) => m + b.minutes, 0);
 
   return (
     <div className="px-5 pt-6">
@@ -134,9 +137,19 @@ function Today() {
           </p>
         )}
         {cfg.goals && (
-          <p className="mt-1 text-xs font-semibold opacity-75">
-            Suas metas: {AREA_ORDER.map((a) => `${AREAS[a].name} ${cfg.goals![a]}`).join(" · ")}
-          </p>
+          <div className="mt-2">
+            <p className="text-xs font-semibold opacity-75">Suas metas</p>
+            <ul className="mt-1 flex flex-wrap gap-1.5" aria-label="Metas por área">
+              {AREA_ORDER.map((a) => (
+                <li
+                  key={a}
+                  className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[11px] font-semibold"
+                >
+                  {AREAS[a].short} {cfg.goals![a]}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {daysLeft > 0 && (
           <p className="mt-1 text-xs opacity-75">
@@ -157,6 +170,15 @@ function Today() {
               {done}/{blocks.length}
             </span>
           </div>
+          {blocks.length > 0 && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {left === total
+                ? `${total} min de estudo hoje.`
+                : left > 0
+                  ? `Faltam ${left} de ${total} min de estudo hoje.`
+                  : `${total} min de estudo concluídos.`}
+            </p>
+          )}
           <div className="mt-2.5">
             <Progress value={blocks.length ? done / blocks.length : 0} />
           </div>
@@ -170,11 +192,8 @@ function Today() {
         </div>
       </section>
 
-      <div className="mt-3">
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
         <LeagueCard league={leagueOf(state, today)} />
-      </div>
-
-      <div className="mt-3">
         <ReviewToday attempts={state.attempts} today={today} />
       </div>
 
@@ -204,6 +223,9 @@ function Today() {
           <h2 className="mb-2.5 flex items-center gap-2 text-base font-bold">
             <ShiftIcon shift={s} />
             {SHIFT_LABEL[s]}
+            <span className="text-xs font-semibold text-muted-foreground">
+              · {blocks.filter((b) => b.shift === s).reduce((m, b) => m + b.minutes, 0)} min
+            </span>
           </h2>
           <div className="space-y-2.5">
             {blocks

@@ -50,3 +50,10 @@
 - [x] Mini-simulados by area with timer, exam mode and correction; results feed pentagon, mastery, XP and plan.
 - [ ] Full ENEM mock (2 days × 90 questions) once the bank grows.
 - [ ] AI essay correction (decision 6) after privacy/terms (phase 10) and parental consent (decision 2).
+
+# Home, schedule, visual polish and PWA (phase 9)
+- [x] Home: goals as chips, minutes of the day, league and review side by side on wide screens, minutes per shift.
+- [x] Schedule: today highlighted, total time and done count per day, shift labels; move/redistribute/reprioritize unchanged.
+- [x] Visible keyboard focus, reduced motion, "Economia de dados" in Ajustes.
+- [x] PWA: manifest, icons, service worker; main tabs open offline; offline page for screens never opened.
+- [ ] Topic pages (/conteudos/<tópico>) are cached only after being opened once.

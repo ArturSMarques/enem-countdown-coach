@@ -46,6 +46,8 @@ export type State = {
   studied: string[];
   skipped: string[];
   theme: "light" | "dark" | null;
+  /** "Economia de dados": no heavy animations or confetti (also follows "reduce motion"). */
+  dataSaver: boolean;
   /** Answers given in the questions section, by question id (first answer of each question). */
   quiz: Record<string, QuizAnswer>;
   /** Every answer, oldest first: the history used for computed mastery (version 3). */
@@ -73,6 +75,7 @@ const EMPTY: State = {
   studied: [],
   skipped: [],
   theme: null,
+  dataSaver: false,
   quiz: {},
   attempts: [],
   quizDaily: {},
@@ -107,6 +110,8 @@ export function migrate(raw: unknown, today: string): State {
     s = { ...s, config: { ...s.config, dateMode, ...(edition ? { edition } : {}) } };
   }
   if ((saved.version ?? 1) < 3 && s.config) s = { ...s, config: migrateConfigV3(s.config, today) };
+  // Data saver came after version 3 as an optional setting: states saved without it start off.
+  if (typeof saved.dataSaver !== "boolean") s = { ...s, dataSaver: false };
   // The attempts history is part of version 3. It is filled from `quiz` whenever it is missing,
   // which also covers states saved by an early build of version 3 without it.
   if (!Array.isArray(saved.attempts)) s = { ...s, attempts: attemptsFromQuiz(s.quiz ?? {}) };
@@ -387,6 +392,7 @@ export const removeLink = (id: string) =>
 export const toggleCheck = (id: string) =>
   setState((s) => ({ ...s, checklist: { ...s.checklist, [id]: !s.checklist[id] } }));
 export const setTheme = (theme: "light" | "dark") => setState((s) => ({ ...s, theme }));
+export const setDataSaver = (dataSaver: boolean) => setState((s) => ({ ...s, dataSaver }));
 
 // ---------- questions ----------
 function planTopicsOf(s: State, day: string) {

@@ -67,6 +67,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Cronograma dinâmico para os últimos dias antes do ENEM." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#007565" },
+      { name: "apple-mobile-web-app-title", content: "Reta Enem" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -75,6 +77,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      // Installable app (PWA): manifest with icons; the service worker is registered below.
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -103,6 +107,37 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+const OFFLINE_TABS = [
+  "/",
+  "/cronograma",
+  "/conteudos",
+  "/questoes",
+  "/desempenho",
+  "/aulas",
+  "/simulado",
+];
+
+/**
+ * Registers the service worker (public/sw.js) in production builds, so pages already opened work
+ * without internet. Not in development, where caching would hide code changes.
+ */
+function ServiceWorker() {
+  useEffect(() => {
+    if (import.meta.env.DEV || !("serviceWorker" in navigator)) return;
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => navigator.serviceWorker.ready)
+      .then((reg) => {
+        // Save the main tabs in the background, so they open offline even before being visited.
+        if (navigator.onLine) reg.active?.postMessage({ type: "warm", paths: OFFLINE_TABS });
+      })
+      .catch(() => {
+        /* offline support is optional: the app works without it */
+      });
+  }, []);
+  return null;
+}
+
 function ThemeSync() {
   const { state, ready } = useAppState();
   useEffect(() => {
@@ -112,6 +147,9 @@ function ThemeSync() {
       : window.matchMedia("(prefers-color-scheme: dark)").matches;
     document.documentElement.classList.toggle("dark", dark);
   }, [state.theme, ready]);
+  useEffect(() => {
+    if (ready) document.documentElement.classList.toggle("data-saver", state.dataSaver);
+  }, [state.dataSaver, ready]);
   return null;
 }
 
@@ -120,6 +158,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
+      <ServiceWorker />
       <div className="mx-auto min-h-screen max-w-2xl pb-28">
         <Outlet />
       </div>

@@ -181,3 +181,18 @@ describe("migration to version 3 (personalized plan)", () => {
     expect(after.config?.edition).toBeUndefined();
   });
 });
+
+describe("data saver setting", () => {
+  it("starts off for states saved without it and keeps everything else", () => {
+    const saved = { ...v2(v2cfg), version: 3 };
+    const s = migrate(saved, "2026-11-25");
+    expect(s.dataSaver).toBe(false);
+    expect(s.quiz).toEqual(saved.quiz);
+    expect(s.links).toEqual(saved.links);
+  });
+
+  it("keeps the choice once saved", () => {
+    const s = migrate({ ...v2(v2cfg), version: 3, dataSaver: true }, "2026-11-25");
+    expect(s.dataSaver).toBe(true);
+  });
+});

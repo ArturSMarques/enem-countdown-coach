@@ -48,3 +48,14 @@ www.youtube.com foi recusada (ERR_BLOCKED_BY_RESPONSE)"**, o problema não é o 
 - **Saída segura no app:** cada link de aula tem o botão **"Copiar link"**; a tela de
   aulas explica o que fazer quando o link não abre e avisa quando o site está dentro de
   outra página.
+
+## App instalável e sem internet
+
+O Reta Enem pode ser instalado na tela inicial do celular, pelo menu do navegador: "Adicionar à tela inicial" ou "Instalar app". Depois de aberto uma vez com internet, ele funciona sem rede:
+- as abas principais (Hoje, Cronograma, Conteúdos, Questões, Desempenho, Aulas e Simulado) ficam guardadas no aparelho;
+- as páginas de cada tópico ficam guardadas depois de abertas uma vez;
+- o progresso do aluno fica salvo no navegador, como sempre.
+
+Links externos, como YouTube e sites de resumo, precisam de internet.
+
+O mesmo `public/sw.js` vai para os dois alvos: o Lovable (Cloudflare) e o Render (Node). Em Ajustes, o modo **Economia de dados** desliga animações e o confete. O app também respeita a opção "reduzir movimento" do aparelho.

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { saveConfig, useAppState } from "@/lib/store";
+import { saveConfig, setDataSaver, useAppState } from "@/lib/store";
 import { formatDays, resolveExam, selectableEditions, targetEdition } from "@/lib/editions";
 import {
   DIFFICULTY_MAX,
@@ -339,6 +339,28 @@ function Onboarding() {
         <p className="rounded-2xl bg-accent p-4 text-sm text-accent-foreground" aria-live="polite">
           {reason}
         </p>
+
+        {state.config && (
+          <section className="card-soft p-5" aria-labelledby="q-saver">
+            <label className="flex items-start justify-between gap-3">
+              <span>
+                <span id="q-saver" className="block text-sm font-bold">
+                  Economia de dados
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Desliga animações e o confete. Bom para celular simples ou internet fraca. Vale na
+                  hora, sem precisar salvar.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={state.dataSaver}
+                onChange={(e) => setDataSaver(e.target.checked)}
+                className="mt-1 h-5 w-5 shrink-0 accent-primary"
+              />
+            </label>
+          </section>
+        )}
 
         <button
           onClick={submit}
