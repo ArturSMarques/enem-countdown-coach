@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Check, PlayCircle, X } from "lucide-react";
+import { useRef } from "react";
 import { AREAS, TOPIC_BY_ID } from "@/lib/data";
 import { LEVEL_LABEL, type Level } from "@/lib/question-types";
 import { optionOrder } from "@/lib/quiz";
@@ -23,8 +24,10 @@ export function QuestionCard({
   index: number;
   /** Index of the chosen alternative in `question.options`, or undefined if not answered yet. */
   choice: number | undefined;
-  onAnswer: (choice: number) => void;
+  /** Receives the chosen alternative and the time spent on the question, in ms. */
+  onAnswer: (choice: number, ms: number) => void;
 }) {
+  const shownAt = useRef(Date.now());
   const topic = TOPIC_BY_ID[question.topicId];
   if (!topic) return null;
   const answered = choice !== undefined;
@@ -133,7 +136,7 @@ export function QuestionCard({
               <button
                 type="button"
                 disabled={answered}
-                onClick={() => onAnswer(original)}
+                onClick={() => onAnswer(original, Date.now() - shownAt.current)}
                 aria-label={`Alternativa ${LETTERS[position]}`}
                 className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${tone}`}
               >
