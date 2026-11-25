@@ -2,6 +2,7 @@ import { TOPIC_BY_ID } from "./data";
 import type { Level, Question } from "./question-types";
 import { DEPTH_QUESTIONS } from "./questions-depth";
 import { ENEM_QUESTIONS } from "./questions-enem";
+import { NEW_QUESTIONS } from "./questions-novas";
 
 export type { Question } from "./question-types";
 
@@ -994,6 +995,8 @@ export const QUESTIONS: Question[] = [
   ...SHORT_QUESTIONS.map((x) => (MEDIA.has(x.id) ? { ...x, level: "media" as const } : x)),
   ...ENEM_QUESTIONS,
   ...DEPTH_QUESTIONS,
+  // New questions enter only after review (students check, the teacher approves).
+  ...NEW_QUESTIONS.filter((x) => x.revisada === true),
 ];
 
 export const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((x) => [x.id, x])) as Record<

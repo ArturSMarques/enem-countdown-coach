@@ -1,6 +1,7 @@
 import { TOPIC_BY_ID, type Area, type Priority } from "./data";
 import type { PerfEntry, Stage } from "./planner";
 import type { Level } from "./question-types";
+import { canShowContent } from "./question-types";
 import { QUESTIONS, questionSubject, type Question } from "./questions";
 
 export const DAILY_COUNT = 5;
@@ -59,7 +60,8 @@ export function pickQuestions(opts: {
     weakSubjects = new Set(),
   } = opts;
   const rand = seededRandom(`${day}:${exclude.size}:${level}`);
-  const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id));
+  // Real questions not released for display can't be answered in the app (reference only).
+  const pool = (opts.bank ?? QUESTIONS).filter((x) => !exclude.has(x.id) && canShowContent(x));
   const stageBonus = (x: Question) => {
     const stage = opts.stages?.[TOPIC_BY_ID[x.topicId]?.area ?? "red"];
     if (stage === "base") return x.level === "facil" ? 2.5 : x.level === "dificil" ? -1 : 0;

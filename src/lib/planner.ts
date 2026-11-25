@@ -19,7 +19,10 @@ export type Block = {
   shift: Shift;
   done: boolean;
 };
+/** Manual marks of versions up to 3 ("Dominado / Revisar / Não vi"). Kept in state.status, no longer read. */
 export type TopicStatus = "dominado" | "revisar" | "nao";
+/** Mastery computed from the student's answers (see topic-mastery.ts and mastery-config.ts). */
+export type MasteryLevel = "nao_iniciado" | "basico" | "desenvolvendo" | "avancado" | "dominado";
 /** How hard each area feels to the student, 1 (easy) to 10 (very hard). Version 2 used 1–5. */
 export type Difficulty = Record<"ling" | "mat" | "nat" | "hum", number>;
 export const DIFFICULTY_MAX = 10;
@@ -155,7 +158,17 @@ export function areaFactors(
     }),
   ) as Record<Area, number>;
 }
-const ST_W: Record<TopicStatus, number> = { dominado: 0.35, revisar: 1, nao: 1.2 };
+/**
+ * Weight by computed mastery. The anchors are the weights of the old manual marks (não vi 1.2,
+ * revisar 1, dominado 0.35); the levels in between are interpolated.
+ */
+export const LEVEL_W: Record<MasteryLevel, number> = {
+  nao_iniciado: 1.2,
+  basico: 1.1,
+  desenvolvendo: 1,
+  avancado: 0.675,
+  dominado: 0.35,
+};
 
 export function weakSubjects(perf: PerfEntry[]) {
   const agg: Record<string, { total: number; correct: number }> = {};
@@ -210,27 +223,27 @@ export function planReason(
 export function topicScore(
   topic: Topic,
   cfg: Config,
-  status: Record<string, TopicStatus>,
+  status: Record<string, MasteryLevel>,
   weak: Set<string>,
   factors: Record<Area, number> = areaFactors(cfg.goals),
 ) {
   // Scale 1–10 (version 2 used 1–5 with 0.6 + diff * 0.2; values were doubled on migration, so
   // 0.6 + diff * 0.1 gives exactly the same weight).
   const diff = topic.area === "red" ? Math.max(cfg.difficulty.ling, 6) : cfg.difficulty[topic.area];
-  const st = status[topic.id] ?? "nao";
+  const st = status[topic.id] ?? "nao_iniciado";
   return (
     topicWeight(topic) *
     AREA_W[topic.area] *
     factors[topic.area] *
     (0.6 + diff * 0.1) *
-    ST_W[st] *
+    LEVEL_W[st] *
     (weak.has(topic.subject) ? 1.4 : 1)
   );
 }
 
 export function rankedTopics(
   cfg: Config,
-  status: Record<string, TopicStatus>,
+  status: Record<string, MasteryLevel>,
   perf: PerfEntry[],
   weights?: Partial<Record<Area, number>> | undefined,
 ) {
@@ -294,7 +307,7 @@ export function dueReviews(plan: Record<string, Block[]>, from: string): Record<
 
 export function buildPlan(opts: {
   cfg: Config;
-  status: Record<string, TopicStatus>;
+  status: Record<string, MasteryLevel>;
   perf: PerfEntry[];
   from: string;
   counts?: Record<string, number>;

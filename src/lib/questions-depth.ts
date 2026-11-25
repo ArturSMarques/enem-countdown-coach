@@ -1,4 +1,5 @@
 import { xyChart, toFigure } from "./figures";
+import { errorTypesOf } from "./error-types";
 import type { Question } from "./question-types";
 
 /**
@@ -8,7 +9,12 @@ import type { Question } from "./question-types";
  * (`porQue`). Ids são append-only: acrescente no fim, com número novo.
  */
 type Input = Omit<Question, "topicId">;
-const d = (x: Input): Question => ({ ...x, topicId: x.id.replace(/-\d+$/, "") });
+const d = (x: Input): Question => {
+  const q: Question = { ...x, topicId: x.id.replace(/-\d+$/, "") };
+  const erros = errorTypesOf(x.id);
+  if (erros) q.erros = erros;
+  return q;
+};
 
 export const DEPTH_QUESTIONS: Question[] = [
   // ======================= Matemática =======================

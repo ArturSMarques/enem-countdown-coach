@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, BookOpenCheck, PlayCircle } from "lucide-react";
+import { MasteryDetail } from "@/components/MasteryBadge";
 import { QuestionCard } from "@/components/QuestionCard";
+import { todayISO } from "@/lib/planner";
+import { topicMastery } from "@/lib/topic-mastery";
 import { Collapsible, ExerciseCard, LayerBody, TrapList } from "@/components/TopicDepth";
 import { AreaTag, Loading } from "@/components/ui-bits";
 import { CONTENT, LAYER_HINT, LAYER_LABEL } from "@/lib/content";
@@ -139,8 +142,12 @@ function TopicPage() {
         <section className="mt-6">
           <h2 className="text-base font-bold">Teste rápido</h2>
           <p className="text-xs text-muted-foreground">
-            Questões do banco sobre este tópico. As respostas entram no Desempenho.
+            Questões do banco sobre este tópico. As respostas entram no Desempenho e definem o seu
+            nível neste tópico.
           </p>
+          <div className="mt-3">
+            <MasteryDetail mastery={topicMastery(topicId, state.attempts, todayISO())} />
+          </div>
           <div className="mt-3 space-y-3">
             {quick.map((q, i) => (
               <QuestionCard
@@ -148,7 +155,7 @@ function TopicPage() {
                 question={q}
                 index={i}
                 choice={state.quiz[q.id]?.choice}
-                onAnswer={(c) => answerQuestion(q.id, c)}
+                onAnswer={(c, ms) => answerQuestion(q.id, c, ms)}
               />
             ))}
           </div>

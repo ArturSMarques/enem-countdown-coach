@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVEL_STYLE, QuestionCard } from "@/components/QuestionCard";
@@ -66,7 +66,7 @@ function Questions() {
         <Progress value={set.length ? done.length / set.length : 0} />
         <p className="mt-2 text-xs text-muted-foreground">
           Todo dia vêm questões novas, no estilo ENEM, misturando níveis e escolhidas pelo que está
-          no seu plano e pelos seus pontos fracos. Seus acertos entram no Desempenho.
+          no seu plano e pelas suas pendências. Seus acertos entram no Desempenho.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ function Questions() {
             question={x}
             index={set.indexOf(x)}
             choice={state.quiz[x.id]?.choice}
-            onAnswer={(c) => answerQuestion(x.id, c)}
+            onAnswer={(c, ms) => answerQuestion(x.id, c, ms)}
           />
         ))}
         {shown.length === 0 && (
@@ -129,6 +129,12 @@ function Questions() {
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">
           Questões já respondidas, por nível
+        </p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Questões autorais e revisadas antes de entrar.{" "}
+          <Link to="/creditos" className="font-semibold text-primary hover:underline">
+            Créditos e fontes
+          </Link>
         </p>
       </div>
     </div>
