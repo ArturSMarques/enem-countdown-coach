@@ -13,7 +13,9 @@ import { TOPIC_BY_ID } from "@/lib/data";
 import { INCIDENCE, INCIDENCE_YEARS } from "@/lib/incidence";
 import { LEVELS } from "@/lib/question-types";
 import { QUESTIONS } from "@/lib/questions";
-import { answerQuestion, useAppState } from "@/lib/store";
+import { answerQuestion, recordAnswers, useAppState } from "@/lib/store";
+import { reviewQuestions, reviewsDue } from "@/lib/review";
+import { useState } from "react";
 
 export const Route = createFileRoute("/conteudos_/$topicId")({
   head: ({ params }) => {
@@ -42,6 +44,8 @@ const QUICK_TEST = 3;
 function TopicPage() {
   const { topicId } = Route.useParams();
   const { state, ready } = useAppState();
+  // Answers given in this visit's review (a review can repeat questions answered before).
+  const [reviewChoices, setReviewChoices] = useState<Record<string, number>>({});
   if (!ready) return <Loading />;
   const topic = TOPIC_BY_ID[topicId];
   if (!topic)
@@ -61,6 +65,16 @@ function TopicPage() {
       LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level),
   );
   const quick = pool.slice(0, QUICK_TEST);
+  const today = todayISO();
+  const due = reviewsDue(state.attempts, today).some((r) => r.topicId === topicId);
+  // Once a review starts, its questions stay on screen until the page is left.
+  const reviewing = due || Object.keys(reviewChoices).length > 0;
+  const review = reviewing
+    ? reviewQuestions(
+        topicId,
+        state.attempts.filter((a) => !(a.questionId in reviewChoices) || a.day < today),
+      )
+    : [];
 
   return (
     <div className="px-5 pb-6 pt-6">
@@ -152,7 +166,33 @@ function TopicPage() {
         </section>
       )}
 
-      {quick.length > 0 && (
+      {reviewing && review.length > 0 && (
+        <section className="mt-6" aria-labelledby="review-title">
+          <h2 id="review-title" className="text-base font-bold">
+            Revisão de hoje
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Responda {review.length} questões deste tópico. Acertando todas, a próxima revisão fica
+            mais longe; errando, o tópico volta amanhã.
+          </p>
+          <div className="mt-3 space-y-3">
+            {review.map((q, i) => (
+              <QuestionCard
+                key={q.id}
+                question={q}
+                index={i}
+                choice={reviewChoices[q.id]}
+                onAnswer={(c, ms) => {
+                  setReviewChoices((prev) => ({ ...prev, [q.id]: c }));
+                  recordAnswers([{ id: q.id, choice: c, ms }]);
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!reviewing && quick.length > 0 && (
         <section className="mt-6">
           <h2 className="text-base font-bold">Teste rápido</h2>
           <p className="text-xs text-muted-foreground">

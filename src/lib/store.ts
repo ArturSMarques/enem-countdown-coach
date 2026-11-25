@@ -29,6 +29,7 @@ import {
 } from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
 import { COURSE_BY_ID } from "./course-weights";
+import { adaptiveReviews } from "./review";
 import { leagueOf } from "./league";
 import { attemptsFromQuiz, topicLevels, type Attempt } from "./topic-mastery";
 
@@ -215,14 +216,16 @@ export function extendPlan(s: State, today: string): State {
   if (last && (last >= lastExamEve || diffDays(today, last) >= 27)) return s;
   const from = last ? addDays(last, 1) : today;
   if (from > lastExamEve) return s;
+  const until = addDays(today, HORIZON_DAYS - 1);
   const fresh = buildPlan({
     cfg,
     status: topicLevels(s.attempts, today),
     perf: s.perf,
     from,
-    until: addDays(today, HORIZON_DAYS - 1),
+    until,
     counts: doneCounts(s.plan, from),
-    reviews: dueReviews(s.plan, from),
+    // Days already planned keep their reviews; the "Revisão de hoje" card shows overdue ones.
+    ...planReviews(s, dueReviews(s.plan, from), from, until, false),
     stages: stagesByArea(s.quiz),
     weights: courseWeights(cfg),
   });
@@ -282,6 +285,28 @@ function doneCounts(plan: Record<string, Block[]>, before: string) {
   return c;
 }
 
+/**
+ * Reviews for a new stretch of the plan: answered topics follow the adaptive schedule (review.ts);
+ * the others keep the reviews owed by the plan's fixed gaps.
+ */
+function planReviews(
+  s: State,
+  owed: Record<string, string[]>,
+  from: string,
+  until: string,
+  includeOverdue: boolean,
+) {
+  const adaptive = adaptiveReviews(s.attempts, from, until, includeOverdue);
+  const reviews: Record<string, string[]> = {};
+  for (const [day, ids] of Object.entries(owed)) {
+    const keep = ids.filter((id) => !adaptive.topics.has(id));
+    if (keep.length) reviews[day] = keep;
+  }
+  for (const [day, ids] of Object.entries(adaptive.reviews))
+    reviews[day] = [...(reviews[day] ?? []), ...ids];
+  return { reviews, adaptiveTopics: adaptive.topics };
+}
+
 /** Rebuilds the plan from today on (keeps the past; keeps today if something was already done). */
 export function regenerate(s: State, cfg = s.config, today = todayISO()): State {
   if (!cfg) return s;
@@ -294,7 +319,7 @@ export function regenerate(s: State, cfg = s.config, today = todayISO()): State 
     perf: s.perf,
     from,
     counts: doneCounts(s.plan, from),
-    reviews: dueReviews(past, from),
+    ...planReviews(s, dueReviews(past, from), from, addDays(cfg.examDate, -1), true),
     stages: stagesByArea(s.quiz),
     weights: courseWeights(cfg),
   });
@@ -408,29 +433,46 @@ export function moreQuestions(day: string, level: LevelChoice = "mix") {
   });
 }
 
+/** Adds one answer to the history (and the first answer of a question to `quiz`). */
+function withAnswer(
+  s: State,
+  id: string,
+  choice: number,
+  ms: number | undefined,
+  day: string,
+): State {
+  const question = QUESTION_BY_ID[id];
+  if (!question || choice < 0 || choice >= question.options.length) return s;
+  const attempt: Attempt = { questionId: id, choice, correct: choice === question.answer, day };
+  if (ms !== undefined && Number.isFinite(ms) && ms >= 0) attempt.ms = Math.round(ms);
+  const perf = withQuizResult(
+    s.perf,
+    questionSubject(question),
+    choice === question.answer,
+    day,
+    crypto.randomUUID(),
+  );
+  return {
+    ...s,
+    quiz: s.quiz[id] ? s.quiz : { ...s.quiz, [id]: { choice, day } },
+    attempts: [...(s.attempts ?? []), attempt],
+    perf,
+  };
+}
+
 /** Records an answer. `ms` is the time spent on the question, when the screen measured it. */
 export function answerQuestion(id: string, choice: number, ms?: number) {
-  const question = QUESTION_BY_ID[id];
-  if (!question || choice < 0 || choice >= question.options.length) return;
   const day = todayISO();
-  setState((s) => {
-    if (s.quiz[id]) return s;
-    const attempt: Attempt = { questionId: id, choice, correct: choice === question.answer, day };
-    if (ms !== undefined && Number.isFinite(ms) && ms >= 0) attempt.ms = Math.round(ms);
-    const perf = withQuizResult(
-      s.perf,
-      questionSubject(question),
-      choice === question.answer,
-      day,
-      crypto.randomUUID(),
-    );
-    return {
-      ...s,
-      quiz: { ...s.quiz, [id]: { choice, day } },
-      attempts: [...(s.attempts ?? []), attempt],
-      perf,
-    };
-  });
+  setState((s) => (s.quiz[id] ? s : withAnswer(s, id, choice, ms, day)));
+}
+
+/**
+ * Records answers even to questions answered before (reviews and mini-simulados): each one is a new
+ * attempt in the history; `quiz` keeps the first answer.
+ */
+export function recordAnswers(list: { id: string; choice: number; ms?: number | undefined }[]) {
+  const day = todayISO();
+  setState((s) => list.reduce((acc, a) => withAnswer(acc, a.id, a.choice, a.ms, day), s));
 }
 
 export function streakOf(studied: string[]) {

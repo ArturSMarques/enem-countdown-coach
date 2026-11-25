@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Check, ChevronDown, ListChecks, PlayCircle } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ListChecks, PlayCircle, Timer } from "lucide-react";
 import { useState } from "react";
 import { AREAS, TOPIC_BY_ID } from "@/lib/data";
 import type { Block } from "@/lib/planner";
@@ -83,6 +83,14 @@ export function BlockCard({
               className="mt-2 flex items-center gap-1.5 font-semibold text-primary"
             >
               <ListChecks className="h-4 w-4" /> Fazer questões do dia
+            </Link>
+          )}
+          {block.activity === "Simulado" && (
+            <Link
+              to="/simulado"
+              className="mt-2 flex items-center gap-1.5 font-semibold text-primary"
+            >
+              <Timer className="h-4 w-4" /> Fazer um mini-simulado de {AREAS[tp.area].name}
             </Link>
           )}
         </div>
