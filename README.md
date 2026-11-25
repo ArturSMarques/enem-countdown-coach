@@ -24,3 +24,27 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Links do YouTube: "www.youtube.com está bloqueado"
+
+Se, ao clicar em uma aula, aparecer **"www.youtube.com está bloqueado — A conexão com
+www.youtube.com foi recusada (ERR_BLOCKED_BY_RESPONSE)"**, o problema não é o link.
+
+- **Causa:** o YouTube não deixa as páginas dele abrirem dentro de outra página (envia
+  `X-Frame-Options: SAMEORIGIN`). Quando o Reta Enem está rodando dentro de uma moldura
+  (`iframe`), o link herda essa moldura e o navegador mostra esse erro. Isso acontece, por
+  exemplo, na pré-visualização do editor do Lovable (moldura com `sandbox`) ou com um
+  domínio configurado como "redirecionamento com máscara". Abrindo o site direto no
+  navegador, o mesmo link abre o YouTube normalmente em uma aba nova.
+- **Como foi confirmado:** o erro exato (`net::ERR_BLOCKED_BY_RESPONSE`) foi reproduzido no
+  Chrome com o site dentro de um iframe com `sandbox="allow-popups"` sem
+  `allow-popups-to-escape-sandbox`; sem moldura, o link abre.
+- **Não é bloqueio da rede:** uma rede (por exemplo, a da escola) que bloqueia o YouTube
+  costuma dar outros erros, como `ERR_BLOCKED_BY_ADMINISTRATOR` ou conexão recusada pelo
+  filtro. Isso não se resolve no código: use outra rede (como os dados do celular).
+- **Domínio próprio:** ligue o domínio como *Custom domain* no Lovable (ou aponte o DNS
+  para o Render), nunca com redirecionamento com máscara, que coloca o site dentro de um
+  iframe.
+- **Saída segura no app:** cada link de aula tem o botão **"Copiar link"**; a tela de
+  aulas explica o que fazer quando o link não abre e avisa quando o site está dentro de
+  outra página.

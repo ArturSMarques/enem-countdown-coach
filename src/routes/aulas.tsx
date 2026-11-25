@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { ExternalResourceLink as A } from "@/components/ExternalResourceLink";
+import { ExternalLinkHelp, ExternalResourceLink as A } from "@/components/ExternalResourceLink";
 import { AreaTag, Chip, Loading, PageHeader } from "@/components/ui-bits";
 import {
   AREA_ORDER,
@@ -66,6 +66,10 @@ function Lessons() {
         ))}
       </div>
 
+      <div className="mt-3 px-5">
+        <ExternalLinkHelp />
+      </div>
+
       <div className="mt-4 space-y-2 px-5">
         {list.map((t) => (
           <div key={t.id} className="card-soft p-3.5">
@@ -95,8 +99,12 @@ function Lessons() {
                 ))}
                 <li className="flex flex-wrap gap-3 border-t pt-2.5 text-xs">
                   <span className="text-muted-foreground">Resumos:</span>
-                  <A href={todaMateria(t.name)}>Toda Matéria</A>
-                  <A href={brasilEscola(t.name)}>Brasil Escola</A>
+                  <A href={todaMateria(t.name)} copyable={false}>
+                    Toda Matéria
+                  </A>
+                  <A href={brasilEscola(t.name)} copyable={false}>
+                    Brasil Escola
+                  </A>
                 </li>
               </ul>
             )}
