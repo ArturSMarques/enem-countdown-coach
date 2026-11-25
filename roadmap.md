@@ -38,3 +38,8 @@
 - [x] XP from answers, blocks and streaks; five leagues ("moderado"); gentle drop after 21 days away.
 - [x] Question difficulty ceiling by league; time per question shown from Intermediário; real released questions first from Avançado.
 - [ ] Shared ranking (needs a server, section 13).
+
+# Selected lessons (phase 7)
+- [x] Lessons data by topic and level, shown in Aulas, on the topic page and in "Pendências a melhorar".
+- [x] Candidates script (YouTube Data API, key only in env) and check:lessons (oEmbed) with docs/aulas.md.
+- [ ] Team creates the API key and runs `bun run aulas:candidatas`; the teacher picks 2–4 lessons per topic, starting with high-incidence topics.

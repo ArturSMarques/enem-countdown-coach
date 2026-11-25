@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { LessonItem } from "@/components/LessonList";
+import { suggestedLesson } from "@/lib/lessons";
 import { BookOpen, ExternalLink, PlayCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { AreaPentagon } from "@/components/AreaPentagon";
@@ -118,6 +120,12 @@ function Performance() {
                     <PlayCircle className="h-3.5 w-3.5" /> Ver aulas
                   </Link>
                 </div>
+                {suggestedLesson(p.topicId) && (
+                  <div className="mt-2 border-t pt-2">
+                    <p className="text-xs font-semibold">Aula sugerida</p>
+                    <LessonItem lesson={suggestedLesson(p.topicId)!} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

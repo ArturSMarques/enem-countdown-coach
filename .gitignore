@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Chaves locais (ex.: YOUTUBE_API_KEY para bun run aulas:candidatas). Nunca versionar.
+.env
+.env.*
