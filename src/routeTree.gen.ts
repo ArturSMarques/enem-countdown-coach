@@ -16,8 +16,10 @@ import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as CronogramaRouteImport } from './routes/cronograma'
 import { Route as DesempenhoRouteImport } from './routes/desempenho'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as QuestoesRouteImport } from './routes/questoes'
 import { Route as SimuladoRouteImport } from './routes/simulado'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ConteudosTopicIdRouteImport } from './routes/conteudos_.$topicId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -55,6 +57,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuestoesRoute = QuestoesRouteImport.update({
   id: '/questoes',
   path: '/questoes',
@@ -63,6 +70,11 @@ const QuestoesRoute = QuestoesRouteImport.update({
 const SimuladoRoute = SimuladoRouteImport.update({
   id: '/simulado',
   path: '/simulado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConteudosTopicIdRoute = ConteudosTopicIdRouteImport.update({
@@ -79,8 +91,10 @@ export interface FileRoutesByFullPath {
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
   '/simulado': typeof SimuladoRoute
+  '/termos': typeof TermosRoute
   '/conteudos/$topicId': typeof ConteudosTopicIdRoute
 }
 export interface FileRoutesByTo {
@@ -91,8 +105,10 @@ export interface FileRoutesByTo {
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
   '/simulado': typeof SimuladoRoute
+  '/termos': typeof TermosRoute
   '/conteudos/$topicId': typeof ConteudosTopicIdRoute
 }
 export interface FileRoutesById {
@@ -104,8 +120,10 @@ export interface FileRoutesById {
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
   '/simulado': typeof SimuladoRoute
+  '/termos': typeof TermosRoute
   '/conteudos_/$topicId': typeof ConteudosTopicIdRoute
 }
 export interface FileRouteTypes {
@@ -118,8 +136,10 @@ export interface FileRouteTypes {
     | '/cronograma'
     | '/desempenho'
     | '/onboarding'
+    | '/privacidade'
     | '/questoes'
     | '/simulado'
+    | '/termos'
     | '/conteudos/$topicId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,8 +150,10 @@ export interface FileRouteTypes {
     | '/cronograma'
     | '/desempenho'
     | '/onboarding'
+    | '/privacidade'
     | '/questoes'
     | '/simulado'
+    | '/termos'
     | '/conteudos/$topicId'
   id:
     | '__root__'
@@ -142,8 +164,10 @@ export interface FileRouteTypes {
     | '/cronograma'
     | '/desempenho'
     | '/onboarding'
+    | '/privacidade'
     | '/questoes'
     | '/simulado'
+    | '/termos'
     | '/conteudos_/$topicId'
   fileRoutesById: FileRoutesById
 }
@@ -155,8 +179,10 @@ export interface RootRouteChildren {
   CronogramaRoute: typeof CronogramaRoute
   DesempenhoRoute: typeof DesempenhoRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   QuestoesRoute: typeof QuestoesRoute
   SimuladoRoute: typeof SimuladoRoute
+  TermosRoute: typeof TermosRoute
   ConteudosTopicIdRoute: typeof ConteudosTopicIdRoute
 }
 
@@ -211,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/questoes': {
       id: '/questoes'
       path: '/questoes'
@@ -223,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/simulado'
       fullPath: '/simulado'
       preLoaderRoute: typeof SimuladoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conteudos_/$topicId': {
@@ -243,8 +283,10 @@ const rootRouteChildren: RootRouteChildren = {
   CronogramaRoute: CronogramaRoute,
   DesempenhoRoute: DesempenhoRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   QuestoesRoute: QuestoesRoute,
   SimuladoRoute: SimuladoRoute,
+  TermosRoute: TermosRoute,
   ConteudosTopicIdRoute: ConteudosTopicIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -57,3 +57,8 @@
 - [x] Visible keyboard focus, reduced motion, "Economia de dados" in Ajustes.
 - [x] PWA: manifest, icons, service worker; main tabs open offline; offline page for screens never opened.
 - [ ] Topic pages (/conteudos/<tópico>) are cached only after being opened once.
+
+# Terms and privacy (phase 10)
+- [x] Visible disclaimer (no score guarantee), /termos and /privacidade in plain language, acceptance on the first plan and notice for existing users.
+- [x] LGPD on the device: download all data (JSON) and delete all data from Ajustes.
+- [ ] Before accounts: parental consent with the school (decision 2), contact e-mail, legal review — docs/privacidade-pendencias.md.

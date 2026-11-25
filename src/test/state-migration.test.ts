@@ -196,3 +196,19 @@ describe("data saver setting", () => {
     expect(s.dataSaver).toBe(true);
   });
 });
+
+describe("terms acceptance", () => {
+  it("states saved before the privacy phase have not accepted yet, and lose nothing", () => {
+    const saved = { ...v2(v2cfg), version: 3 };
+    const s = migrate(saved, "2026-11-26");
+    expect(s.termsAccepted).toBeNull();
+    expect(s.quiz).toEqual(saved.quiz);
+  });
+
+  it("keeps a saved acceptance", () => {
+    const termsAccepted = { version: "1", day: "2026-11-26" };
+    expect(
+      migrate({ ...v2(v2cfg), version: 3, termsAccepted }, "2026-11-27").termsAccepted,
+    ).toEqual(termsAccepted);
+  });
+});

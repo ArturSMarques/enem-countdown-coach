@@ -107,6 +107,17 @@ function Credits() {
             provas oficiais de 2024 a 2026.
           </p>
         </section>
+        <p className="text-center text-xs text-muted-foreground">
+          Veja também os{" "}
+          <Link to="/termos" className="font-semibold text-primary">
+            Termos de Uso
+          </Link>{" "}
+          e a{" "}
+          <Link to="/privacidade" className="font-semibold text-primary">
+            Política de Privacidade
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { ReviewToday } from "@/components/ReviewToday";
 import { leagueOf } from "@/lib/league";
 import { Loading, Progress } from "@/components/ui-bits";
 import { checklistFor } from "@/lib/checklist";
+import { acceptedCurrentTerms, DISCLAIMER } from "@/lib/legal";
 import { COURSE_BY_ID, courseLabel } from "@/lib/course-weights";
 import { AREA_ORDER, AREAS, MOTIVATION } from "@/lib/data";
 import { formatDays, resolveExam, type Edition } from "@/lib/editions";
@@ -24,6 +25,7 @@ import {
   type Shift,
 } from "@/lib/planner";
 import {
+  acceptTerms,
   courseWeights,
   setTheme,
   skipToday,
@@ -112,6 +114,33 @@ function Today() {
           </Link>
         </div>
       </div>
+
+      {!acceptedCurrentTerms(state.termsAccepted) && (
+        <section
+          aria-label="Termos e privacidade"
+          className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm"
+        >
+          <p className="font-semibold">Termos de Uso e Política de Privacidade</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Explicamos em linguagem simples o que o app guarda (tudo fica só neste aparelho) e que
+            ele é um apoio aos estudos, sem garantia de nota. Leia os{" "}
+            <Link to="/termos" className="font-semibold text-primary">
+              Termos
+            </Link>{" "}
+            e a{" "}
+            <Link to="/privacidade" className="font-semibold text-primary">
+              Privacidade
+            </Link>
+            .
+          </p>
+          <button
+            onClick={acceptTerms}
+            className="mt-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+          >
+            Li e aceito
+          </button>
+        </section>
+      )}
 
       <section className="mt-3 overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground">
         <p className="text-sm font-semibold opacity-80">{final ? "Modo Semana Final" : "Faltam"}</p>
@@ -249,6 +278,21 @@ function Today() {
       )}
 
       {(final || daysLeft <= 0) && <ExamChecklist checked={state.checklist} edition={edition} />}
+
+      <footer className="mt-10 border-t pt-4 text-center text-xs text-muted-foreground">
+        <p>{DISCLAIMER}</p>
+        <p className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 font-semibold">
+          <Link to="/termos" className="text-primary">
+            Termos de Uso
+          </Link>
+          <Link to="/privacidade" className="text-primary">
+            Privacidade
+          </Link>
+          <Link to="/creditos" className="text-primary">
+            Créditos e fontes
+          </Link>
+        </p>
+      </footer>
     </div>
   );
 }
