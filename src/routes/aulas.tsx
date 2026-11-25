@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LessonList } from "@/components/LessonList";
+import { lessonsOf } from "@/lib/lessons";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ExternalLinkHelp, ExternalResourceLink as A } from "@/components/ExternalResourceLink";
@@ -80,6 +82,11 @@ function Lessons() {
               <span className="font-semibold">{t.name}</span>
               <AreaTag area={t.area} label={t.subject} />
             </button>
+            {open === t.id && lessonsOf(t.id).length > 0 && (
+              <div className="animate-in fade-in mt-3 border-b pb-3 text-sm">
+                <LessonList lessons={lessonsOf(t.id)} />
+              </div>
+            )}
             {open === t.id && (
               <ul className="animate-in fade-in mt-3 space-y-2.5 text-sm">
                 {(CHANNELS_BY_SUBJECT[t.subject] ?? []).map((c) => (

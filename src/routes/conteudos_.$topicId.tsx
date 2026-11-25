@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { LessonItem } from "@/components/LessonList";
+import { suggestedLesson } from "@/lib/lessons";
 import { ArrowLeft, BookOpenCheck, PlayCircle } from "lucide-react";
 import { MasteryDetail } from "@/components/MasteryBadge";
 import { QuestionCard } from "@/components/QuestionCard";
@@ -136,6 +138,18 @@ function TopicPage() {
           O aprofundamento deste tópico ainda está em construção. Enquanto isso, use as aulas
           recomendadas e o teste rápido abaixo.
         </p>
+      )}
+
+      {suggestedLesson(topicId) && (
+        <section className="mt-6 card-soft p-4 text-sm">
+          <h2 className="text-base font-bold">Aula recomendada</h2>
+          <div className="mt-2">
+            <LessonItem lesson={suggestedLesson(topicId)!} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Assistir ajuda a entender, mas o seu nível no tópico vem das questões que você responde.
+          </p>
+        </section>
       )}
 
       {quick.length > 0 && (
