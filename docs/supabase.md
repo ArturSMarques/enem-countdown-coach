@@ -45,6 +45,32 @@ Na prática:
 - **Contas de colegas fora da equipe**, enquanto não houver um provedor de e-mail: desliguem a confirmação de e-mail em *Authentication → Sign In / Providers → Email → Confirm email*. Assim o aluno entra logo depois de criar a conta, mas não fica comprovado que o e-mail é dele.
 - **Menores de idade:** o link de autorização vai para o e-mail do responsável. Com o envio grátis, ele **só chega se o responsável estiver na equipe**. Para uso real com menores, configurem um provedor de e-mail em *Authentication → Emails → SMTP Settings*, por exemplo o Resend, com o domínio `retaenem.com.br`.
 
+## 3.1 Provedor de e-mail com o Resend (para funcionar com qualquer e-mail)
+
+Com um provedor, os e-mails chegam para qualquer endereço (Gmail, Outlook…), inclusive o link dos responsáveis. O código do app não muda. Os limites do plano grátis do Resend mudam com o tempo: confiram no site.
+
+**No Resend:**
+1. Criem a conta em https://resend.com. Dá para entrar com o GitHub.
+2. Em **Domains → Add Domain**, digitem `retaenem.com.br`.
+3. O Resend mostra alguns registros de DNS (do tipo TXT e MX). Abram o painel onde o domínio foi registrado (por exemplo, o Registro.br) e criem esses registros exatamente como aparecem.
+4. Voltem ao Resend e cliquem em **Verify**. A verificação pode levar de alguns minutos a algumas horas.
+5. Em **API Keys → Create API Key**, criem uma chave com permissão **Sending access** e copiem. Essa chave é **secreta**: ela só vai no painel do Supabase (passo abaixo). Nunca no chat, no código ou no GitHub.
+
+**No Supabase:**
+1. Abram **Authentication → Emails → SMTP Settings** e liguem **Enable custom SMTP**.
+2. Preencham os campos. Os dados do servidor aparecem na própria página de SMTP do Resend; se forem diferentes destes, vale o que estiver lá.
+   - **Sender email:** `nao-responda@retaenem.com.br`
+   - **Sender name:** `Reta Enem`
+   - **Host:** `smtp.resend.com`
+   - **Port:** `465`
+   - **Username:** `resend`
+   - **Password:** a API key do Resend
+3. Cliquem em **Save**.
+4. Em **Authentication → Rate Limits**, confiram o limite de e-mails por hora e ajustem se precisarem de mais.
+5. Liguem de novo **Confirm email**, caso tenha sido desligado para os testes.
+
+**Para testar:** criem uma conta com um Gmail que **não** esteja na equipe. O e-mail de confirmação deve chegar; se não aparecer, olhem a caixa de spam.
+
 ## 4. Textos dos e-mails, em português
 
 Em **Authentication → Emails → Templates**, troquem o assunto e o corpo de cada e-mail. Mantenham `{{ .ConfirmationURL }}` exatamente assim.
