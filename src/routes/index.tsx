@@ -2,7 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import confetti from "canvas-confetti";
 import { Flame, Moon, Settings2, Sun, Sunrise, Sunset } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { Avatar } from "@/components/Avatar";
 import { BlockCard } from "@/components/BlockCard";
+import { useAccount } from "@/lib/account-store";
 import { LeagueCard } from "@/components/LeagueCard";
 import { ReviewToday } from "@/components/ReviewToday";
 import { leagueOf } from "@/lib/league";
@@ -57,6 +59,7 @@ export const Route = createFileRoute("/")({
 
 function Today() {
   const { state, ready } = useAppState();
+  const account = useAccount();
   const nav = useNavigate();
   const today = todayISO();
   const blocks = state.plan[today] ?? [];
@@ -105,6 +108,13 @@ function Today() {
           >
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
+          <Link
+            to="/perfil"
+            aria-label={account.profile ? `Perfil de ${account.profile.apelido}` : "Perfil"}
+            className="rounded-full p-1 hover:bg-muted"
+          >
+            <Avatar id={account.profile?.avatar} size={32} label="Perfil" />
+          </Link>
           <Link
             to="/onboarding"
             aria-label="Ajustes"

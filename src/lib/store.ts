@@ -409,6 +409,26 @@ export const currentState = () => {
   return state;
 };
 
+/** Replaces everything saved on this device (used after joining with the account's progress). */
+export function replaceState(next: State) {
+  state = migrate(next, todayISO());
+  loaded = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch {
+    /* ignore */
+  }
+  listeners.forEach((l) => l());
+}
+
+/** Calls `listener` after every change of the saved data; returns a function that stops it. */
+export function onStateChange(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 /** "Apagar todos os meus dados deste aparelho": removes the saved key and starts from zero. */
 export function clearAllData() {
   try {

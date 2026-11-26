@@ -15,9 +15,13 @@ import { Route as ConteudosRouteImport } from './routes/conteudos'
 import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as CronogramaRouteImport } from './routes/cronograma'
 import { Route as DesempenhoRouteImport } from './routes/desempenho'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as QuestoesRouteImport } from './routes/questoes'
+import { Route as ResponsavelRouteImport } from './routes/responsavel'
 import { Route as SimuladoRouteImport } from './routes/simulado'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ConteudosTopicIdRouteImport } from './routes/conteudos_.$topicId'
@@ -52,9 +56,24 @@ const DesempenhoRoute = DesempenhoRouteImport.update({
   path: '/desempenho',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -65,6 +84,11 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
 const QuestoesRoute = QuestoesRouteImport.update({
   id: '/questoes',
   path: '/questoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResponsavelRoute = ResponsavelRouteImport.update({
+  id: '/responsavel',
+  path: '/responsavel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SimuladoRoute = SimuladoRouteImport.update({
@@ -90,9 +114,13 @@ export interface FileRoutesByFullPath {
   '/creditos': typeof CreditosRoute
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
+  '/entrar': typeof EntrarRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/onboarding': typeof OnboardingRoute
+  '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
+  '/responsavel': typeof ResponsavelRoute
   '/simulado': typeof SimuladoRoute
   '/termos': typeof TermosRoute
   '/conteudos/$topicId': typeof ConteudosTopicIdRoute
@@ -104,9 +132,13 @@ export interface FileRoutesByTo {
   '/creditos': typeof CreditosRoute
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
+  '/entrar': typeof EntrarRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/onboarding': typeof OnboardingRoute
+  '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
+  '/responsavel': typeof ResponsavelRoute
   '/simulado': typeof SimuladoRoute
   '/termos': typeof TermosRoute
   '/conteudos/$topicId': typeof ConteudosTopicIdRoute
@@ -119,9 +151,13 @@ export interface FileRoutesById {
   '/creditos': typeof CreditosRoute
   '/cronograma': typeof CronogramaRoute
   '/desempenho': typeof DesempenhoRoute
+  '/entrar': typeof EntrarRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/onboarding': typeof OnboardingRoute
+  '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
+  '/responsavel': typeof ResponsavelRoute
   '/simulado': typeof SimuladoRoute
   '/termos': typeof TermosRoute
   '/conteudos_/$topicId': typeof ConteudosTopicIdRoute
@@ -135,9 +171,13 @@ export interface FileRouteTypes {
     | '/creditos'
     | '/cronograma'
     | '/desempenho'
+    | '/entrar'
+    | '/nova-senha'
     | '/onboarding'
+    | '/perfil'
     | '/privacidade'
     | '/questoes'
+    | '/responsavel'
     | '/simulado'
     | '/termos'
     | '/conteudos/$topicId'
@@ -149,9 +189,13 @@ export interface FileRouteTypes {
     | '/creditos'
     | '/cronograma'
     | '/desempenho'
+    | '/entrar'
+    | '/nova-senha'
     | '/onboarding'
+    | '/perfil'
     | '/privacidade'
     | '/questoes'
+    | '/responsavel'
     | '/simulado'
     | '/termos'
     | '/conteudos/$topicId'
@@ -163,9 +207,13 @@ export interface FileRouteTypes {
     | '/creditos'
     | '/cronograma'
     | '/desempenho'
+    | '/entrar'
+    | '/nova-senha'
     | '/onboarding'
+    | '/perfil'
     | '/privacidade'
     | '/questoes'
+    | '/responsavel'
     | '/simulado'
     | '/termos'
     | '/conteudos_/$topicId'
@@ -178,9 +226,13 @@ export interface RootRouteChildren {
   CreditosRoute: typeof CreditosRoute
   CronogramaRoute: typeof CronogramaRoute
   DesempenhoRoute: typeof DesempenhoRoute
+  EntrarRoute: typeof EntrarRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
   OnboardingRoute: typeof OnboardingRoute
+  PerfilRoute: typeof PerfilRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   QuestoesRoute: typeof QuestoesRoute
+  ResponsavelRoute: typeof ResponsavelRoute
   SimuladoRoute: typeof SimuladoRoute
   TermosRoute: typeof TermosRoute
   ConteudosTopicIdRoute: typeof ConteudosTopicIdRoute
@@ -230,11 +282,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesempenhoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -249,6 +322,13 @@ declare module '@tanstack/react-router' {
       path: '/questoes'
       fullPath: '/questoes'
       preLoaderRoute: typeof QuestoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/responsavel': {
+      id: '/responsavel'
+      path: '/responsavel'
+      fullPath: '/responsavel'
+      preLoaderRoute: typeof ResponsavelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/simulado': {
@@ -282,9 +362,13 @@ const rootRouteChildren: RootRouteChildren = {
   CreditosRoute: CreditosRoute,
   CronogramaRoute: CronogramaRoute,
   DesempenhoRoute: DesempenhoRoute,
+  EntrarRoute: EntrarRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
   OnboardingRoute: OnboardingRoute,
+  PerfilRoute: PerfilRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   QuestoesRoute: QuestoesRoute,
+  ResponsavelRoute: ResponsavelRoute,
   SimuladoRoute: SimuladoRoute,
   TermosRoute: TermosRoute,
   ConteudosTopicIdRoute: ConteudosTopicIdRoute,

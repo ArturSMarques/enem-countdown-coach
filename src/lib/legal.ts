@@ -3,7 +3,7 @@
  * that matters to the student, bump TERMS_VERSION: students who accepted an older version see the
  * notice again. Contact and consent for minors are pending (docs/privacidade-pendencias.md).
  */
-export const TERMS_VERSION = "1";
+export const TERMS_VERSION = "2";
 export const TERMS_UPDATED = "2026-11-26";
 export const RESPONSIBLE = "Equipe do TCC Reta Enem";
 export const CONTACT = "fale com a equipe do projeto pela escola";
