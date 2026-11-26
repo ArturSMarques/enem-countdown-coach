@@ -29,6 +29,7 @@ import {
 } from "./quiz";
 import { QUESTION_BY_ID, questionSubject } from "./questions";
 import { COURSE_BY_ID } from "./course-weights";
+import { TERMS_VERSION, type TermsAcceptance } from "./legal";
 import { adaptiveReviews } from "./review";
 import { leagueOf } from "./league";
 import { attemptsFromQuiz, topicLevels, type Attempt } from "./topic-mastery";
@@ -48,6 +49,8 @@ export type State = {
   theme: "light" | "dark" | null;
   /** "Economia de dados": no heavy animations or confetti (also follows "reduce motion"). */
   dataSaver: boolean;
+  /** Acceptance of the Terms and Privacy Policy (version and day), or null if not accepted yet. */
+  termsAccepted: TermsAcceptance | null;
   /** Answers given in the questions section, by question id (first answer of each question). */
   quiz: Record<string, QuizAnswer>;
   /** Every answer, oldest first: the history used for computed mastery (version 3). */
@@ -76,6 +79,7 @@ const EMPTY: State = {
   skipped: [],
   theme: null,
   dataSaver: false,
+  termsAccepted: null,
   quiz: {},
   attempts: [],
   quizDaily: {},
@@ -112,6 +116,9 @@ export function migrate(raw: unknown, today: string): State {
   if ((saved.version ?? 1) < 3 && s.config) s = { ...s, config: migrateConfigV3(s.config, today) };
   // Data saver came after version 3 as an optional setting: states saved without it start off.
   if (typeof saved.dataSaver !== "boolean") s = { ...s, dataSaver: false };
+  // Terms acceptance came with the privacy phase: states saved before it have not accepted yet.
+  if (!saved.termsAccepted || typeof saved.termsAccepted !== "object")
+    s = { ...s, termsAccepted: null };
   // The attempts history is part of version 3. It is filled from `quiz` whenever it is missing,
   // which also covers states saved by an early build of version 3 without it.
   if (!Array.isArray(saved.attempts)) s = { ...s, attempts: attemptsFromQuiz(s.quiz ?? {}) };
@@ -393,6 +400,26 @@ export const toggleCheck = (id: string) =>
   setState((s) => ({ ...s, checklist: { ...s.checklist, [id]: !s.checklist[id] } }));
 export const setTheme = (theme: "light" | "dark") => setState((s) => ({ ...s, theme }));
 export const setDataSaver = (dataSaver: boolean) => setState((s) => ({ ...s, dataSaver }));
+export const acceptTerms = () =>
+  setState((s) => ({ ...s, termsAccepted: { version: TERMS_VERSION, day: todayISO() } }));
+
+/** The saved data, for "Baixar meus dados". */
+export const currentState = () => {
+  load();
+  return state;
+};
+
+/** "Apagar todos os meus dados deste aparelho": removes the saved key and starts from zero. */
+export function clearAllData() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* ignore */
+  }
+  state = { ...EMPTY };
+  loaded = true;
+  listeners.forEach((l) => l());
+}
 
 // ---------- questions ----------
 function planTopicsOf(s: State, day: string) {

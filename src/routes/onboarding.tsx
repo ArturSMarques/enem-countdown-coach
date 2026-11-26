@@ -1,6 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { saveConfig, setDataSaver, useAppState } from "@/lib/store";
+import {
+  acceptTerms,
+  clearAllData,
+  currentState,
+  saveConfig,
+  setDataSaver,
+  useAppState,
+} from "@/lib/store";
+import { acceptedCurrentTerms, DISCLAIMER, exportFileName, exportJSON } from "@/lib/legal";
 import { formatDays, resolveExam, selectableEditions, targetEdition } from "@/lib/editions";
 import {
   DIFFICULTY_MAX,
@@ -23,6 +31,19 @@ import {
   suggestGoals,
 } from "@/lib/course-weights";
 import { Chip } from "@/components/ui-bits";
+
+/** "Baixar meus dados": saves everything kept on this device as a JSON file. */
+function downloadData() {
+  const blob = new Blob([exportJSON(currentState())], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = exportFileName(todayISO());
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -56,6 +77,7 @@ function Onboarding() {
   const { state, ready } = useAppState();
   const nav = useNavigate();
   const today = todayISO();
+  const [agreed, setAgreed] = useState(false);
   const [cfg, setCfg] = useState<Config>(() => ({
     ...DEFAULT,
     examDate: targetEdition(today).days[0],
@@ -76,7 +98,11 @@ function Onboarding() {
   const reason = planReason({ goals: typedGoals }, course?.weights, course && courseLabel(course));
   const allShifts = cfg.shifts.length === SHIFT_ORDER.length;
 
+  const firstTime = !state.config;
+  const mustAccept = firstTime && !acceptedCurrentTerms(state.termsAccepted);
   const submit = () => {
+    if (mustAccept && !agreed) return;
+    if (mustAccept) acceptTerms();
     const next: Config = { ...cfg, dateMode: mode };
     if (mode !== "edicao") delete next.edition;
     if (typedGoals) next.goals = typedGoals;
@@ -362,9 +388,78 @@ function Onboarding() {
           </section>
         )}
 
+        {state.config && (
+          <section className="card-soft p-5" aria-labelledby="q-data">
+            <h2 id="q-data" className="text-sm font-bold">
+              Seus dados
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Tudo fica salvo só neste aparelho. Veja a{" "}
+              <Link to="/privacidade" className="font-semibold text-primary">
+                Política de Privacidade
+              </Link>{" "}
+              e os{" "}
+              <Link to="/termos" className="font-semibold text-primary">
+                Termos de Uso
+              </Link>
+              .
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={downloadData}
+                className="rounded-lg bg-secondary px-3 py-2 text-xs font-bold text-secondary-foreground"
+              >
+                Baixar meus dados
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    confirm(
+                      "Apagar todo o seu progresso deste aparelho? Plano, respostas, metas e links serão apagados e não dá para desfazer.",
+                    )
+                  ) {
+                    clearAllData();
+                    nav({ to: "/onboarding" });
+                  }
+                }}
+                className="rounded-lg border border-destructive/40 px-3 py-2 text-xs font-bold text-destructive"
+              >
+                Apagar todos os meus dados deste aparelho
+              </button>
+            </div>
+          </section>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">{DISCLAIMER}</p>
+
+        {mustAccept && (
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+            />
+            <span>
+              Li e aceito os{" "}
+              <Link to="/termos" className="font-semibold text-primary">
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link to="/privacidade" className="font-semibold text-primary">
+                Política de Privacidade
+              </Link>
+              .
+            </span>
+          </label>
+        )}
+
         <button
           onClick={submit}
-          className="w-full rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg transition-transform active:scale-[0.98]"
+          disabled={mustAccept && !agreed}
+          className="w-full rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {state.config ? "Salvar e recalcular plano" : "Criar meu plano"}
         </button>
