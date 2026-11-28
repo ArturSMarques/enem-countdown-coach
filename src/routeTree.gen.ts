@@ -21,6 +21,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as QuestoesRouteImport } from './routes/questoes'
+import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as ResponsavelRouteImport } from './routes/responsavel'
 import { Route as SimuladoRouteImport } from './routes/simulado'
 import { Route as TermosRouteImport } from './routes/termos'
@@ -86,6 +87,11 @@ const QuestoesRoute = QuestoesRouteImport.update({
   path: '/questoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResponsavelRoute = ResponsavelRouteImport.update({
   id: '/responsavel',
   path: '/responsavel',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
+  '/ranking': typeof RankingRoute
   '/responsavel': typeof ResponsavelRoute
   '/simulado': typeof SimuladoRoute
   '/termos': typeof TermosRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
+  '/ranking': typeof RankingRoute
   '/responsavel': typeof ResponsavelRoute
   '/simulado': typeof SimuladoRoute
   '/termos': typeof TermosRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/questoes': typeof QuestoesRoute
+  '/ranking': typeof RankingRoute
   '/responsavel': typeof ResponsavelRoute
   '/simulado': typeof SimuladoRoute
   '/termos': typeof TermosRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/privacidade'
     | '/questoes'
+    | '/ranking'
     | '/responsavel'
     | '/simulado'
     | '/termos'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/privacidade'
     | '/questoes'
+    | '/ranking'
     | '/responsavel'
     | '/simulado'
     | '/termos'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/privacidade'
     | '/questoes'
+    | '/ranking'
     | '/responsavel'
     | '/simulado'
     | '/termos'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   PerfilRoute: typeof PerfilRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   QuestoesRoute: typeof QuestoesRoute
+  RankingRoute: typeof RankingRoute
   ResponsavelRoute: typeof ResponsavelRoute
   SimuladoRoute: typeof SimuladoRoute
   TermosRoute: typeof TermosRoute
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuestoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/responsavel': {
       id: '/responsavel'
       path: '/responsavel'
@@ -368,6 +388,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerfilRoute: PerfilRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   QuestoesRoute: QuestoesRoute,
+  RankingRoute: RankingRoute,
   ResponsavelRoute: ResponsavelRoute,
   SimuladoRoute: SimuladoRoute,
   TermosRoute: TermosRoute,
