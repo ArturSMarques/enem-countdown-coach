@@ -3,7 +3,7 @@ import { useState } from "react";
 import { AvatarPicker } from "@/components/Avatar";
 import { Chip, PageHeader } from "@/components/ui-bits";
 import { PASSWORD_MIN, signUpProblem } from "@/lib/account";
-import { sendPasswordReset, signIn, signUp } from "@/lib/account-store";
+import { sendPasswordReset, signIn, signInWithGoogle, signUp } from "@/lib/account-store";
 import { DEFAULT_AVATAR } from "@/lib/avatars";
 import { accountsEnabled } from "@/lib/supabase";
 
@@ -54,10 +54,34 @@ function SignInPage() {
         </Chip>
       </div>
       <div className="px-5 pb-10 pt-4">
+        {mode !== "senha" && <GoogleButton />}
         {mode === "entrar" && <SignInForm onForgot={() => setMode("senha")} />}
         {mode === "criar" && <SignUpForm />}
         {mode === "senha" && <ResetForm />}
       </div>
+    </div>
+  );
+}
+
+/** "Continuar com o Google": the Google account confirms the e-mail; the app then asks for the
+ * nickname, age and terms once, on the profile page. */
+function GoogleButton() {
+  const [msg, setMsg] = useState("");
+  return (
+    <div className="mb-4">
+      <button
+        type="button"
+        onClick={async () => setMsg((await signInWithGoogle()) ?? "")}
+        className="w-full rounded-xl border bg-card py-3 text-sm font-bold hover:bg-muted"
+      >
+        Continuar com o Google
+      </button>
+      {msg && (
+        <p role="alert" className="mt-1 text-sm text-destructive">
+          {msg}
+        </p>
+      )}
+      <p className="mt-3 text-center text-xs text-muted-foreground">ou use e-mail e senha</p>
     </div>
   );
 }

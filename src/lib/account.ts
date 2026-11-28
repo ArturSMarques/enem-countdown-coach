@@ -33,6 +33,14 @@ export function signUpProblem(i: SignUpInput): string | null {
   return null;
 }
 
+/** Problems with the "complete your sign-up" form shown after signing in with Google. */
+export function completeProfileProblem(
+  i: Pick<SignUpInput, "apelido" | "adulto" | "responsavelEmail" | "aceitou">,
+  ownEmail: string,
+): string | null {
+  return signUpProblem({ ...i, email: ownEmail, senha: "x".repeat(PASSWORD_MIN) });
+}
+
 /** Profile as stored in the account (see supabase/migrations/0001_contas.sql). */
 export type Profile = {
   id: string;

@@ -2,10 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AreaPentagon } from "@/components/AreaPentagon";
 import { Avatar, AvatarPicker } from "@/components/Avatar";
-import { Loading, PageHeader } from "@/components/ui-bits";
-import { canSync, NICKNAME_RULE, PASSWORD_MIN } from "@/lib/account";
+import { Chip, Loading, PageHeader } from "@/components/ui-bits";
+import { DEFAULT_AVATAR } from "@/lib/avatars";
+import { canSync, completeProfileProblem, NICKNAME_RULE, PASSWORD_MIN } from "@/lib/account";
 import {
   changeEmail,
+  completeProfile,
   changeGuardian,
   deleteAccount,
   sendGuardianLink,
@@ -197,19 +199,7 @@ function AccountCallout() {
         </div>
       </section>
     );
-  if (a.status === "guardian")
-    return (
-      <section className="rounded-2xl border p-4 text-sm">
-        Você entrou como responsável.{" "}
-        <Link to="/responsavel" className="font-semibold text-primary">
-          Ver a autorização
-        </Link>{" "}
-        ·{" "}
-        <button onClick={() => void signOut()} className="font-semibold text-primary">
-          Sair
-        </button>
-      </section>
-    );
+  if (a.status === "no-profile") return <CompleteProfile />;
   const p = a.profile;
   if (!p || canSync(p)) return null;
   return (
@@ -255,6 +245,132 @@ function AccountCallout() {
           {msg}
         </p>
       )}
+    </section>
+  );
+}
+
+/**
+ * After signing in with Google: asks once for nickname, avatar, age, guardian and terms. Guardians
+ * who came through the authorization link see a shortcut to their page instead.
+ */
+function CompleteProfile() {
+  const a = useAccount();
+  const [apelido, setApelido] = useState("");
+  const [avatar, setAvatar] = useState(DEFAULT_AVATAR);
+  const [adulto, setAdulto] = useState<boolean | null>(null);
+  const [responsavelEmail, setResponsavelEmail] = useState("");
+  const [aceitou, setAceitou] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const email = a.session?.user.email ?? "";
+  return (
+    <section className="card-soft space-y-4 p-4 text-sm" aria-labelledby="completar">
+      <div>
+        <h2 id="completar" className="text-base font-bold">
+          Complete seu cadastro
+        </h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Você entrou como <strong>{email}</strong>. Falta escolher um apelido e responder duas
+          perguntas. Até completar, o seu progresso fica só neste aparelho.
+        </p>
+      </div>
+      <form
+        className="space-y-4"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const problem = completeProfileProblem(
+            { apelido, adulto, responsavelEmail, aceitou },
+            email,
+          );
+          if (problem) return setMsg(problem);
+          setBusy(true);
+          const error = await completeProfile({
+            apelido,
+            avatar,
+            adulto: adulto!,
+            responsavelEmail,
+          });
+          setBusy(false);
+          setMsg(error ?? "");
+        }}
+      >
+        <label className="block font-semibold">
+          Apelido (aparece no app; não use seu nome completo)
+          <input value={apelido} onChange={(e) => setApelido(e.target.value)} className={input} />
+        </label>
+        <div>
+          <p className="font-semibold">Avatar</p>
+          <div className="mt-2">
+            <AvatarPicker value={avatar} onChange={setAvatar} />
+          </div>
+        </div>
+        <fieldset>
+          <legend className="font-semibold">Você tem 18 anos ou mais?</legend>
+          <div className="mt-2 flex gap-2">
+            <Chip active={adulto === true} onClick={() => setAdulto(true)}>
+              Sim
+            </Chip>
+            <Chip active={adulto === false} onClick={() => setAdulto(false)}>
+              Não
+            </Chip>
+          </div>
+        </fieldset>
+        {adulto === false && (
+          <label className="block font-semibold">
+            E-mail do seu responsável
+            <span className="block text-xs font-normal text-muted-foreground">
+              Ele recebe um link para autorizar. Até autorizar, nada do seu progresso vai para o
+              servidor e você não aparece em rankings.
+            </span>
+            <input
+              type="email"
+              value={responsavelEmail}
+              onChange={(e) => setResponsavelEmail(e.target.value)}
+              className={input}
+            />
+          </label>
+        )}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={aceitou}
+            onChange={(e) => setAceitou(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link to="/termos" className="font-semibold text-primary">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link to="/privacidade" className="font-semibold text-primary">
+              Política de Privacidade
+            </Link>
+            .
+          </span>
+        </label>
+        {msg && (
+          <p role="alert" className="text-destructive">
+            {msg}
+          </p>
+        )}
+        <button
+          disabled={busy}
+          className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? "Salvando…" : "Concluir cadastro"}
+        </button>
+      </form>
+      <p className="border-t pt-3 text-xs text-muted-foreground">
+        É responsável e veio pelo link de autorização?{" "}
+        <Link to="/responsavel" className="font-semibold text-primary">
+          Abra a página de autorização
+        </Link>
+        . Entrou com a conta errada?{" "}
+        <button onClick={() => void signOut()} className="font-semibold text-primary">
+          Sair
+        </button>
+      </p>
     </section>
   );
 }

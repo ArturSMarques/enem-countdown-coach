@@ -69,6 +69,15 @@ function Privacy() {
             só o apelido e o avatar aparecerão para outras pessoas.
           </p>
         </LegalSection>
+        <LegalSection title="Entrar com o Google (opcional)">
+          <p>
+            Se você escolher "Continuar com o Google", o Google informa ao serviço de login o seu
+            nome, e-mail e foto de perfil. O Reta Enem usa só o e-mail: o nome e a foto ficam
+            guardados pelo serviço de login junto da conta, não aparecem no app e são apagados se
+            você excluir a conta. Depois do primeiro acesso, o app pede um apelido, a sua idade (18
+            anos ou mais) e o aceite destes termos, como no cadastro por e-mail.
+          </p>
+        </LegalSection>
         <LegalSection title="Para que servem">
           <p>
             Só para o app funcionar: montar o seu plano, escolher questões, calcular o seu nível e

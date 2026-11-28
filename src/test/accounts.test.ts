@@ -151,3 +151,26 @@ describe("avatars and achievements", () => {
     expect(longestStreak(["2030-01-01", "2030-01-02", "2030-01-05"])).toBe(2);
   });
 });
+
+describe("completing the sign-up after Google", () => {
+  it("uses the same rules as the e-mail sign-up, with the Google e-mail", async () => {
+    const { completeProfileProblem } = await import("@/lib/account");
+    const ok = { apelido: "gui_g", adulto: true, responsavelEmail: "", aceitou: true };
+    expect(completeProfileProblem(ok, "gui@gmail.com")).toBeNull();
+    expect(completeProfileProblem({ ...ok, adulto: null }, "gui@gmail.com")).toMatch(/18 anos/);
+    expect(
+      completeProfileProblem(
+        { ...ok, adulto: false, responsavelEmail: "GUI@gmail.com" },
+        "gui@gmail.com",
+      ),
+    ).toMatch(/diferente/);
+    expect(completeProfileProblem({ ...ok, aceitou: false }, "gui@gmail.com")).toMatch(/Termos/);
+  });
+
+  it("the SQL function exists only for signed-in users", async () => {
+    const { readFileSync } = await import("node:fs");
+    const sql = readFileSync("supabase/migrations/0002_login_google.sql", "utf8");
+    expect(sql).toMatch(/revoke all on function public\.criar_meu_perfil[^;]+from public, anon;/);
+    expect(sql).toMatch(/grant execute on function public\.criar_meu_perfil[^;]+to authenticated;/);
+  });
+});

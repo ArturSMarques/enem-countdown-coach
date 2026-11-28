@@ -124,6 +124,28 @@ Sem essas variáveis, o site funciona como antes, sem a opção de conta.
 
 **Nunca** coloquem a chave **secret** (`sb_secret_...` ou `service_role`) no Render, no código ou no chat. O app não precisa dela.
 
+## 5.1 Entrar com o Google (opcional)
+
+Quem entra com o Google não precisa do e-mail de confirmação: o Google já garante que o endereço é da pessoa. No primeiro acesso, o app pede o apelido, o avatar, a idade, o e-mail do responsável (para menores) e o aceite dos termos.
+
+**No SQL Editor**, rodem também `supabase/migrations/0002_login_google.sql`. Ele cria a função que completa o cadastro.
+
+**No Google Cloud** (console.cloud.google.com):
+1. Criem um projeto `Reta Enem`.
+2. Na tela de consentimento OAuth (*Branding*), preencham:
+   - **Tipo:** Externo.
+   - **Nome:** `Reta Enem`.
+   - **Domínio autorizado:** `retaenem.com.br`. Se aceitar, também `ywxojviayappbetedkcp.supabase.co`; o `supabase.co` puro não é aceito.
+   - **Links:** a página inicial, `/privacidade` e `/termos`.
+   - **Permissões:** só `email`, `profile` e `openid`.
+   - Para liberar para todos, cliquem em **Publicar app**. Em modo de teste, só entram os *Test users*.
+3. Em **Credenciais → Criar credenciais → ID do cliente OAuth → Aplicativo da Web**, preencham:
+   - **Origens JavaScript:** `https://retaenem.com.br`, `https://www.retaenem.com.br` e o endereço da prévia.
+   - **URI de redirecionamento:** `https://ywxojviayappbetedkcp.supabase.co/auth/v1/callback`.
+4. Copiem o **ID do cliente** e a **chave secreta**. A chave secreta só aparece uma vez: se perderem, abram o cliente e usem **Adicionar chave secreta**.
+
+**No Supabase:** em **Authentication → Sign In / Providers → Google**, liguem a opção e colem o **Client ID** e o **Client Secret**. A chave secreta vai só nesse campo.
+
 ## 6. Conferir
 
 - `bun run test` cobre, sem internet: as regras do cadastro, a junção do progresso do aparelho com o da conta, os avatares e as conquistas.

@@ -9,11 +9,13 @@ import { accountsEnabled, siteURL, supabase } from "./supabase";
 
 /**
  * Account state in the browser: session, profile and saving the progress to the account.
- * "student": a student account (has a profile). "guardian": someone who came through the guardian
+ * "student": a student account (has a profile). "no-profile": signed in without a profile yet —
+ * a student who came with Google and still has to complete the sign-up, or a guardian who came
+ * through the authorization link. Previously named "guardian".
  * link (no profile). Saving runs only for adults or authorized minors (also enforced by the
  * database rules in supabase/migrations/0001_contas.sql).
  */
-export type AccountStatus = "off" | "loading" | "signed-out" | "student" | "guardian";
+export type AccountStatus = "off" | "loading" | "signed-out" | "student" | "no-profile";
 export type SyncStatus = "idle" | "saving" | "saved" | "blocked" | "error";
 export type AccountState = {
   status: AccountStatus;
@@ -81,7 +83,7 @@ async function handleSession(sb: SupabaseClient, session: Session | null) {
     .eq("id", session.user.id)
     .maybeSingle();
   if (!data) {
-    set({ status: "guardian", profile: null, sync: "idle" });
+    set({ status: "no-profile", profile: null, sync: "idle" });
     return;
   }
   set({ status: "student", profile: data as Profile });
@@ -197,6 +199,49 @@ export async function sendGuardianLink(email: string): Promise<Result> {
     options: { emailRedirectTo: siteURL("/responsavel"), shouldCreateUser: true },
   });
   return error ? authErrorText(error.message) : null;
+}
+
+/** "Continuar com o Google": opens Google's page and comes back to the profile. */
+export async function signInWithGoogle(): Promise<Result> {
+  const sb = supabase();
+  if (!sb) return off;
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: siteURL("/perfil") },
+  });
+  return error ? "Não foi possível abrir o login do Google. Tente de novo." : null;
+}
+
+/**
+ * Completes the sign-up of an account that came with Google (nickname, avatar, age and terms),
+ * with the same rules as the e-mail sign-up (supabase/migrations/0002_login_google.sql).
+ */
+export async function completeProfile(input: {
+  apelido: string;
+  avatar: string;
+  adulto: boolean;
+  responsavelEmail: string;
+}): Promise<Result> {
+  const sb = supabase();
+  if (!sb || !acc.session) return off;
+  const { data: free } = await sb.rpc("apelido_disponivel", { p_apelido: input.apelido.trim() });
+  if (free === false) return "Esse apelido já está em uso. Escolha outro.";
+  const { error } = await sb.rpc("criar_meu_perfil", {
+    p_apelido: input.apelido.trim(),
+    p_avatar: input.avatar,
+    p_adulto: input.adulto,
+    p_responsavel_email: input.adulto ? null : input.responsavelEmail.trim(),
+    p_termos_versao: TERMS_VERSION,
+  });
+  if (error)
+    return error.message.includes("diferente") || error.message.includes("responsável")
+      ? error.message
+      : "Não foi possível salvar. Confira o apelido e tente de novo.";
+  if (!input.adulto) await sendGuardianLink(input.responsavelEmail.trim());
+  await refreshProfile();
+  set({ status: "student" });
+  await syncNow();
+  return null;
 }
 
 export async function signIn(email: string, senha: string): Promise<Result> {
