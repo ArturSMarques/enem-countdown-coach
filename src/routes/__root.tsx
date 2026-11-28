@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { startAccount } from "@/lib/account-store";
 import {
   Outlet,
   Link,
@@ -107,6 +108,12 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/** Starts the account session (Supabase) in the browser, when accounts are configured. */
+function AccountBoot() {
+  useEffect(() => startAccount(), []);
+  return null;
+}
+
 const OFFLINE_TABS = [
   "/",
   "/cronograma",
@@ -159,6 +166,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
       <ServiceWorker />
+      <AccountBoot />
       <div className="mx-auto min-h-screen max-w-2xl pb-28">
         <Outlet />
       </div>

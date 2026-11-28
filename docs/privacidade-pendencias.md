@@ -12,9 +12,10 @@ Antes de existirem **contas, ranking compartilhado ou IA externa** (seções 11 
 
 ## Decisões pendentes
 
-- [ ] **Consentimento dos responsáveis (decisão 2):** muitos alunos são menores de idade, e a LGPD (Lei nº 13.709/2018) dá proteção especial aos dados de crianças e adolescentes. A escola ou o orientador deve definir como os responsáveis vão autorizar o cadastro antes de abrir o site ao público.
+- [x] **Consentimento dos responsáveis (decisão 2):** a equipe escolheu cadastro aberto, com o responsável autorizando por um link enviado ao e-mail dele (fase 11). Mesmo assim, vale **validar essa forma com a escola ou o orientador** antes de divulgar.
+- [ ] **Provedor de e-mail:** o envio grátis do Supabase só entrega para e-mails da equipe do projeto e tem limite de 2 por hora. Para menores de fora da equipe receberem a autorização, é preciso configurar um provedor (docs/supabase.md, item 3).
 - [ ] **Contato:** hoje aparece "fale com a equipe do projeto pela escola". Antes das contas, é preciso um e-mail ou canal oficial para pedidos de acesso, correção e exclusão.
-- [ ] **Servidor de dados e login (decisão 1):** onde os dados vão ficar e quem tem acesso.
+- [x] **Servidor de dados e login (decisão 1):** Supabase (fase 11), com regras de acesso por linha.
 
 ## Regras para quando houver contas
 

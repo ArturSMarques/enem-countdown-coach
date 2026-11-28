@@ -54,8 +54,16 @@ function Terms() {
           As aulas e os resumos abrem em outros sites, como o YouTube. Esses sites têm regras
           próprias, e o Reta Enem não controla o conteúdo deles.
         </LegalSection>
+        <LegalSection title="Conta (opcional)">
+          A conta serve para guardar o seu progresso e usar o app em mais de um aparelho. Use um
+          apelido sem o seu nome completo e sem palavras ofensivas; a equipe pode trocar apelidos
+          impróprios. Guarde a sua senha e não a compartilhe. Menores de 18 anos precisam da
+          autorização de um responsável para que o progresso seja salvo no servidor. Você pode
+          excluir a conta a qualquer momento, pelo Perfil.
+        </LegalSection>
         <LegalSection title="Seus dados">
-          Hoje não há cadastro: o seu progresso fica salvo só neste aparelho. Veja os detalhes na{" "}
+          Sem conta, o seu progresso fica salvo só neste aparelho; com conta, uma cópia fica no
+          servidor. Veja os detalhes na{" "}
           <Link to="/privacidade" className="font-semibold text-primary">
             Política de Privacidade
           </Link>

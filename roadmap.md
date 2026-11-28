@@ -62,3 +62,11 @@
 - [x] Visible disclaimer (no score guarantee), /termos and /privacidade in plain language, acceptance on the first plan and notice for existing users.
 - [x] LGPD on the device: download all data (JSON) and delete all data from Ajustes.
 - [ ] Before accounts: parental consent with the school (decision 2), contact e-mail, legal review — docs/privacidade-pendencias.md.
+
+# Accounts (phase 11)
+- [x] Optional accounts with Supabase (nickname, e-mail, password), forgot password, sign out, delete account.
+- [x] Minors: guardian e-mail and authorization link; nothing goes to the server before it.
+- [x] First login imports the device's progress (merge without duplicates); automatic saving afterwards.
+- [x] Ten original avatars, profile with summary, pentagon, pending topics and achievements.
+- [ ] Team runs the SQL and sets the Render variables (docs/supabase.md).
+- [ ] Custom SMTP (e.g. Resend with retaenem.com.br) so e-mails reach students and guardians outside the team.
