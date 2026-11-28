@@ -149,9 +149,19 @@ function SignUpForm() {
             com um link para autorizar. Até lá, o seu progresso continua salvo só neste aparelho.
           </p>
         )}
-        <p className="text-muted-foreground">
-          Se o e-mail não chegar em alguns minutos, olhe a caixa de spam.
-        </p>
+        {!done.confirmar && (
+          <p>
+            Você já entrou na conta, e o progresso deste aparelho foi junto.{" "}
+            <Link to="/perfil" className="font-semibold text-primary">
+              Ver meu perfil
+            </Link>
+          </p>
+        )}
+        {(done.confirmar || adulto === false) && (
+          <p className="text-muted-foreground">
+            Se o e-mail não chegar em alguns minutos, olhe a caixa de spam.
+          </p>
+        )}
       </div>
     );
 
