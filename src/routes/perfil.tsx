@@ -68,6 +68,11 @@ function ProfilePage() {
               Liga {league.name} · {league.xp.toLocaleString("pt-BR")} XP
             </p>
             <SyncLine />
+            {profile && canSync(profile) && (
+              <Link to="/ranking" className="mt-1 inline-block text-xs font-semibold text-primary">
+                Ver o ranking
+              </Link>
+            )}
           </div>
         </section>
 

@@ -4,7 +4,17 @@ import { authErrorText, canSync, type Profile } from "./account";
 import { TERMS_VERSION } from "./legal";
 import { mergeStates } from "./merge-state";
 import { todayISO } from "./planner";
-import { currentState, migrate, onStateChange, replaceState, type State } from "./store";
+import type { Period } from "./ranking-config";
+import { answerBatches, parseRanking, type RankingRow } from "./ranking";
+import {
+  currentState,
+  migrate,
+  onAnswers,
+  onStateChange,
+  replaceState,
+  type AnswerEvent,
+  type State,
+} from "./store";
 import { accountsEnabled, siteURL, supabase } from "./supabase";
 
 /**
@@ -23,6 +33,8 @@ export type AccountState = {
   profile: Profile | null;
   sync: SyncStatus;
   lastSync: number | null;
+  /** Points the server gave to the last answers sent to the ranking. */
+  lastPoints: { pontos: number; at: number } | null;
 };
 
 const INITIAL: AccountState = {
@@ -31,6 +43,7 @@ const INITIAL: AccountState = {
   profile: null,
   sync: "idle",
   lastSync: null,
+  lastPoints: null,
 };
 const SERVER: AccountState = { ...INITIAL, status: "off" };
 let acc = INITIAL;
@@ -62,6 +75,7 @@ export function startAccount() {
   const sb = supabase();
   if (!sb || started) return;
   started = true;
+  onAnswers((list) => void sendAnswers(list));
   void sb.auth.getSession().then(({ data }) => handleSession(sb, data.session));
   // Supabase recommends not awaiting its own calls inside this callback.
   sb.auth.onAuthStateChange((_event, session) => {
@@ -140,6 +154,62 @@ async function upload(state: State) {
     atualizado_em: new Date().toISOString(),
   });
   set(error ? { sync: "error" } : { sync: "saved", lastSync: Date.now() });
+}
+
+/**
+ * Shared ranking (phase 12): sends new answers to the server, which checks the answer key and
+ * computes the points (supabase/migrations/0003_ranking.sql). Only for adults or authorized minors.
+ * Without internet the answer stays only on the device and gives no ranking points.
+ */
+async function sendAnswers(list: AnswerEvent[]) {
+  const sb = supabase();
+  if (!sb || acc.status !== "student" || !canSync(acc.profile)) return;
+  for (const batch of answerBatches(list)) {
+    const { data, error } = await sb.rpc("registrar_respostas", { p_respostas: batch });
+    if (error) return;
+    const pontos = Number((data as { pontos?: unknown } | null)?.pontos);
+    if (Number.isFinite(pontos)) set({ lastPoints: { pontos, at: Date.now() } });
+  }
+}
+
+export type MyPoints = {
+  semana: number;
+  mes: number;
+  geral: number;
+  aparece: boolean;
+  sinalizado: boolean;
+};
+
+/** The ranking for a period, or null when it cannot be read (offline, or SQL 0003 not applied). */
+export async function fetchRanking(period: Period): Promise<RankingRow[] | null> {
+  const sb = supabase();
+  if (!sb || !acc.session) return null;
+  const { data, error } = await sb.rpc("ranking", { p_periodo: period });
+  return error ? null : parseRanking(data);
+}
+
+export async function fetchMyPoints(): Promise<MyPoints | null> {
+  const sb = supabase();
+  if (!sb || !acc.session) return null;
+  const { data, error } = await sb.rpc("minha_pontuacao");
+  const row = Array.isArray(data)
+    ? (data[0] as Partial<Record<keyof MyPoints, unknown>> | undefined)
+    : undefined;
+  if (error || !row) return null;
+  return {
+    semana: Number(row.semana) || 0,
+    mes: Number(row.mes) || 0,
+    geral: Number(row.geral) || 0,
+    aparece: row.aparece !== false,
+    sinalizado: row.sinalizado === true,
+  };
+}
+
+export async function setShowInRanking(show: boolean): Promise<Result> {
+  const sb = supabase();
+  if (!sb || !acc.session) return off;
+  const { error } = await sb.rpc("aparecer_no_ranking", { p_aparecer: show });
+  return error ? "Não foi possível salvar. Tente de novo." : null;
 }
 
 export async function refreshProfile() {

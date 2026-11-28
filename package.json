@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "revisao": "bun scripts/revisao-questoes.ts",
     "aulas:candidatas": "bun scripts/aulas-candidatas.ts",
-    "check:lessons": "bun scripts/check-lessons.ts"
+    "check:lessons": "bun scripts/check-lessons.ts",
+    "gabarito": "bun scripts/gerar-gabarito.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
