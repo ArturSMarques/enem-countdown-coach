@@ -20,7 +20,7 @@ Antes de existirem **contas, ranking compartilhado ou IA externa** (seções 11 
 ## Regras para quando houver contas
 
 - Coletar o mínimo e explicar para quê. Por exemplo: apelido e e-mail para recuperar a conta; nada de escola, telefone ou endereço sem necessidade.
-- Ranking **só com apelido**, sem nenhum contato público.
+- Ranking **só com apelido**, sem nenhum contato público. Feito na fase 12: o ranking mostra apelido, avatar e pontos; o aluno pode escolher não aparecer; menor só aparece depois da autorização; revogar a autorização apaga as respostas do ranking.
 - Deixar o aluno **ver, corrigir e excluir** a conta e os dados direto no app.
 - **Nunca** vender nem compartilhar dados de alunos.
 - Se houver IA externa (explicações ou correção de redação), a política deve dizer, **antes** do uso, que o texto do aluno é enviado a esse fornecedor.

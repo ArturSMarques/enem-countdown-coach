@@ -429,6 +429,28 @@ export function onStateChange(listener: () => void) {
   };
 }
 
+export type AnswerEvent = { id: string; choice: number; ms?: number | undefined };
+const answerListeners = new Set<(list: AnswerEvent[]) => void>();
+
+/**
+ * Calls `listener` with every new answer (used by the account to send them to the shared ranking).
+ * Returns a function that stops it.
+ */
+export function onAnswers(listener: (list: AnswerEvent[]) => void) {
+  answerListeners.add(listener);
+  return () => {
+    answerListeners.delete(listener);
+  };
+}
+
+function emitAnswers(list: AnswerEvent[]) {
+  const valid = list.filter((a) => {
+    const q = QUESTION_BY_ID[a.id];
+    return q && a.choice >= 0 && a.choice < q.options.length;
+  });
+  if (valid.length) answerListeners.forEach((l) => l(valid));
+}
+
 /** "Apagar todos os meus dados deste aparelho": removes the saved key and starts from zero. */
 export function clearAllData() {
   try {
@@ -516,7 +538,9 @@ function withAnswer(
 /** Records an answer. `ms` is the time spent on the question, when the screen measured it. */
 export function answerQuestion(id: string, choice: number, ms?: number) {
   const day = todayISO();
+  if (state.quiz[id]) return;
   setState((s) => (s.quiz[id] ? s : withAnswer(s, id, choice, ms, day)));
+  emitAnswers([{ id, choice, ms }]);
 }
 
 /**
@@ -526,6 +550,7 @@ export function answerQuestion(id: string, choice: number, ms?: number) {
 export function recordAnswers(list: { id: string; choice: number; ms?: number | undefined }[]) {
   const day = todayISO();
   setState((s) => list.reduce((acc, a) => withAnswer(acc, a.id, a.choice, a.ms, day), s));
+  emitAnswers(list);
 }
 
 export function streakOf(studied: string[]) {

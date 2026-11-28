@@ -146,7 +146,23 @@ Quem entra com o Google não precisa do e-mail de confirmação: o Google já ga
 
 **No Supabase:** em **Authentication → Sign In / Providers → Google**, liguem a opção e colem o **Client ID** e o **Client Secret**. A chave secreta vai só nesse campo.
 
+## 5.2 Ranking (fase 12)
+
+1. No **SQL Editor**, rodem `supabase/migrations/0003_ranking.sql` (New query → colar → Run).
+2. Em seguida, rodem `supabase/gabarito.sql`: é o gabarito das questões, que o servidor usa para conferir as respostas. Ninguém consegue ler essa tabela pelo app.
+3. **Sempre que questões entrarem no banco** (ou uma questão nova for marcada como `revisada: true`): rodem `bun run gabarito` e rodem de novo o `supabase/gabarito.sql` no Supabase. Um teste (`src/test/ranking.test.ts`) avisa se o arquivo ficou desatualizado. Questão que não está no gabarito do servidor funciona normalmente no app, só não pontua no ranking.
+
+**Para a equipe acompanhar (Table Editor):**
+
+- `suspeitas`: casos anotados automaticamente (`muitas_rapidas`: 10 ou mais respostas em menos de 3 s na mesma hora; `limite_atingido`: passou de um limite; `acertos_demais`: 30 ou mais respostas na hora com 95% ou mais de acerto). Ninguém é punido automaticamente: são só pistas. Depois de olhar, marquem `revisada = true`.
+- `respostas`: cada resposta com o ponto ganho e, quando valeu 0, o `motivo` (`rapida`, `sem_tempo`, `repetida`, `limite_minuto`, `limite_hora`, `limite_dia`).
+- Para **tirar alguém do ranking** por trapaça, em `profiles` marquem `sinalizado = true` (e `false` para devolver). O aluno vê "conta em revisão" e continua usando o app normalmente.
+- Apelido impróprio: troquem o `apelido` em `profiles`.
+
+As regras (3 s, 24 h, 30 por minuto, 600 pontos por hora, 2.000 por dia) estão em `src/lib/ranking-config.ts` e no próprio SQL. Para mudar, alterem os dois e rodem o 0003 de novo.
+
 ## 6. Conferir
 
 - `bun run test` cobre, sem internet: as regras do cadastro, a junção do progresso do aparelho com o da conta, os avatares e as conquistas.
 - As regras de acesso do SQL foram testadas num PostgreSQL local que imita o Supabase, em 19 cenários: quem vê o quê, autorização, revogação e exclusão.
+- O ranking (0003) foi testado do mesmo jeito, em 42 cenários: pontos calculados pelo servidor, 0 ponto para resposta rápida, sem tempo, repetida ou acima dos limites, lote grande recusado, menor sem autorização bloqueado, gabarito e suspeitas fechados, conta sinalizada e quem escolheu não aparecer fora do ranking, semana/mês/geral e apagamento ao revogar ou excluir a conta.

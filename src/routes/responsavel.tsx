@@ -41,12 +41,13 @@ function GuardianPage() {
           <p>
             Um estudante menor de idade criou uma conta no Reta Enem e indicou este e-mail como
             responsável. Ao autorizar, o progresso de estudo dele (plano, respostas e desempenho)
-            passa a ficar guardado no servidor, ligado a um apelido. O app não pede nome, telefone
-            nem escola, e o apelido é o único dado que pode aparecer para outras pessoas.
+            passa a ficar guardado no servidor, ligado a um apelido, e ele passa a participar do
+            ranking, em que outros alunos veem só o apelido, o avatar e os pontos. O app não pede
+            nome, telefone nem escola.
           </p>
           <p className="mt-2 text-muted-foreground">
-            Você pode retirar a autorização quando quiser, por esta mesma página: o progresso salvo
-            no servidor é apagado. Leia os{" "}
+            Você pode retirar a autorização quando quiser, por esta mesma página: o progresso e as
+            respostas do ranking salvos no servidor são apagados. Leia os{" "}
             <Link to="/termos" className="font-semibold text-primary">
               Termos de Uso
             </Link>{" "}

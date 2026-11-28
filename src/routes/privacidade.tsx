@@ -65,8 +65,23 @@ function Privacy() {
           <p>
             O banco de dados, o login e os e-mails da conta (confirmação, autorização e nova senha)
             são do Supabase, o fornecedor contratado para isso. Regras de acesso no próprio banco
-            garantem que cada pessoa só veja os próprios dados. Hoje não há ranking: quando houver,
-            só o apelido e o avatar aparecerão para outras pessoas.
+            garantem que cada pessoa só veja os próprios dados.
+          </p>
+        </LegalSection>
+        <LegalSection title="Ranking (só com conta)">
+          <p>
+            Com a conta ativa, cada questão respondida no app é enviada ao servidor (qual questão, a
+            alternativa escolhida, o tempo gasto e o horário), que confere o gabarito e calcula os
+            pontos do ranking. Esses registros também servem para evitar trapaça: respostas rápidas
+            demais ou acima dos limites valem 0 ponto, e casos estranhos ficam anotados para a
+            equipe revisar.
+          </p>
+          <p>
+            Outros alunos com conta veem no ranking apenas o seu <strong>apelido</strong>, o{" "}
+            <strong>avatar</strong> e os <strong>pontos</strong>. E-mail, idade e respostas nunca
+            aparecem. Você pode escolher não aparecer no ranking quando quiser, na própria página do
+            ranking. Menores de idade só enviam respostas e aparecem depois da autorização do
+            responsável; se a autorização for retirada, as respostas do ranking são apagadas.
           </p>
         </LegalSection>
         <LegalSection title="Entrar com o Google (opcional)">
@@ -80,8 +95,8 @@ function Privacy() {
         </LegalSection>
         <LegalSection title="Para que servem">
           <p>
-            Só para o app funcionar: montar o seu plano, escolher questões, calcular o seu nível e
-            mostrar o seu desempenho.
+            Só para o app funcionar: montar o seu plano, escolher questões, calcular o seu nível,
+            mostrar o seu desempenho e, com conta, montar o ranking.
           </p>
         </LegalSection>
         <LegalSection title="Uso sem internet">
@@ -131,15 +146,15 @@ function Privacy() {
           <p>
             Muitos usuários são menores de idade, e os dados deles têm proteção especial. Quem tem
             menos de 18 anos informa o e-mail de um responsável, que recebe um link para autorizar.
-            Até a autorização, o progresso fica só no aparelho e o estudante não aparece em
-            rankings. O responsável pode retirar a autorização quando quiser, e então o progresso
-            salvo no servidor é apagado.
+            Até a autorização, o progresso fica só no aparelho e o estudante não aparece no ranking.
+            O responsável pode retirar a autorização quando quiser, e então o progresso e as
+            respostas do ranking salvos no servidor são apagados.
           </p>
         </LegalSection>
         <LegalSection title="Mudanças">
           <p>
-            Se esta política mudar de forma importante (por exemplo, com ranking compartilhado), o
-            app avisa e pede um novo aceite.
+            Se esta política mudar de forma importante (por exemplo, com a correção de redação por
+            inteligência artificial), o app avisa e pede um novo aceite.
           </p>
         </LegalSection>
       </article>

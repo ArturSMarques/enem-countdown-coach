@@ -61,17 +61,26 @@ function Terms() {
           autorização de um responsável para que o progresso seja salvo no servidor. Você pode
           excluir a conta a qualquer momento, pelo Perfil.
         </LegalSection>
+        <LegalSection title="Ranking (só com conta)">
+          Com a conta, as questões respondidas no app valem pontos num ranking em que os outros
+          alunos veem só o seu apelido, o avatar e os pontos. Quem calcula os pontos é o servidor.
+          Vale jogar limpo: usar programas, respostas automáticas ou outras contas para ganhar
+          pontos é proibido. Respostas rápidas demais ou acima dos limites valem 0 ponto, e a equipe
+          pode tirar do ranking quem trapacear. Você pode escolher não aparecer no ranking. O
+          ranking é só um incentivo: não vale nota nem prêmio.
+        </LegalSection>
         <LegalSection title="Seus dados">
           Sem conta, o seu progresso fica salvo só neste aparelho; com conta, uma cópia fica no
           servidor. Veja os detalhes na{" "}
           <Link to="/privacidade" className="font-semibold text-primary">
             Política de Privacidade
           </Link>
-          . Se você limpar os dados do navegador ou trocar de aparelho, o progresso não vem junto.
+          . Sem conta, se você limpar os dados do navegador ou trocar de aparelho, o progresso não
+          vem junto.
         </LegalSection>
         <LegalSection title="Mudanças">
-          Estes termos podem mudar, por exemplo quando houver contas. Quando a mudança for
-          importante, o app pede um novo aceite.
+          Estes termos podem mudar quando o app ganhar novidades. Quando a mudança for importante, o
+          app pede um novo aceite.
         </LegalSection>
         <LegalSection title="Contato">Dúvidas ou pedidos: {CONTACT}.</LegalSection>
       </article>

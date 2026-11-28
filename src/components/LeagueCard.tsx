@@ -1,7 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import { Trophy } from "lucide-react";
 import { Progress } from "@/components/ui-bits";
 import type { LeagueStatus } from "@/lib/league";
 import { INACTIVITY_DAYS, LEAGUE_HINT } from "@/lib/league-config";
+import { accountsEnabled } from "@/lib/supabase";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR");
 
@@ -30,6 +32,11 @@ export function LeagueCard({ league }: { league: LeagueStatus }) {
           Você ficou mais de {INACTIVITY_DAYS} dias sem estudar, então a liga desceu um degrau. Ela
           volta assim que você estudar de novo.
         </p>
+      )}
+      {accountsEnabled && (
+        <Link to="/ranking" className="mt-2 inline-block text-sm font-semibold text-primary">
+          Ver o ranking
+        </Link>
       )}
     </section>
   );

@@ -2,8 +2,8 @@ import type { Level } from "./question-types";
 
 /**
  * XP and league rules (initial values chosen by the team: "moderado"). Everything here can be
- * adjusted; the tests in src/test/league.test.ts show the effect. Works only on the device: a
- * shared ranking needs a server (section 13).
+ * adjusted; the tests in src/test/league.test.ts show the effect. Leagues work on the device; the
+ * shared ranking (phase 12) uses the same points per answer, computed by the server.
  */
 export const XP_RULES = {
   /** Every answered question. */

@@ -37,7 +37,7 @@
 # Leagues and XP (phase 6)
 - [x] XP from answers, blocks and streaks; five leagues ("moderado"); gentle drop after 21 days away.
 - [x] Question difficulty ceiling by league; time per question shown from Intermediário; real released questions first from Avançado.
-- [ ] Shared ranking (needs a server, section 13).
+- [x] Shared ranking (phase 12): see "Ranking" below.
 
 # Selected lessons (phase 7)
 - [x] Lessons data by topic and level, shown in Aulas, on the topic page and in "Pendências a melhorar".
@@ -70,3 +70,11 @@
 - [x] Ten original avatars, profile with summary, pentagon, pending topics and achievements.
 - [ ] Team runs the SQL and sets the Render variables (docs/supabase.md).
 - [ ] Custom SMTP (e.g. Resend with retaenem.com.br) so e-mails reach students and guardians outside the team.
+
+# Ranking (phase 12)
+- [x] Points computed by the server (registrar_respostas) from its own copy of the answer key; nothing the browser says about points is accepted.
+- [x] Anti-cheat: 0 points for answers under 3 s, without time, repeated within 24 h or above 30/min, 600/h, 2,000/day; suspicious cases logged for the team; flagged accounts out of the ranking.
+- [x] /ranking: week, month and all-time; nickname, avatar, points; top 3 and own place highlighted; opt-out; minors only after authorization.
+- [x] Terms version 4 (ranking section); revoking authorization also deletes ranking answers.
+- [ ] Team runs 0003_ranking.sql and gabarito.sql on Supabase (and gabarito.sql again whenever questions enter the bank).
+- [ ] Optional later: ranking by class (turmas, phase 13).
